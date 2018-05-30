@@ -1,0 +1,61 @@
+from ftplib import FTP, error_perm
+import os
+from StringIO import StringIO
+
+def auth():
+    ftp = FTP("ftp.ipage.com")
+    ftp.login("pult365net", "2p%ZWm0rt~M8cYc")
+    return ftp
+
+def delete_by_path(ftp, path):
+    try:
+        return ftp.delete(path)
+    except error_perm, msg:
+        return -1
+
+def drop_by_list(ftp, file_name):
+    f = open(file_name, 'r')
+    ok_handled = []
+    not_handled = []
+    error_handled = []
+    for fi in f.readlines():
+        fis = fi.split(' ')
+        if fis[1] in ['SiteLock-PHP-EVAL_REQUEST-md5-uux.UNOFFICIAL', 'SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL', \
+                      'HG.Shell.14.UNOFFICIAL', 'SiteLock-PHP-EVAL_REQUEST-avra.UNOFFICIAL', 'PHP.Mailer-9.UNOFFICIAL', \
+                      'SiteLock-PHP-FILEHACKER-hk.UNOFFICIAL', 'SiteLock-PHP-FILEHACKER-ho.UNOFFICIAL', \
+                      'HG.Shell.16.UNOFFICIAL']:
+            r = delete_by_path(ftp, fis[0][:-1])
+            if r == -1:
+                error_handled.append(fis[0][:-1])
+            else:
+                ok_handled.append(fis[0][:-1])
+        elif fis[1] in ['SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL', 'SiteLock-PHP-EVAL_REQUEST-avhr.UNOFFICIAL']:
+            r = StringIO()
+            ftp.retrbinary('RETR ' + fis[0][:-1], r.write)
+            v = r.getvalue()
+            dp = v.find('exit();} ?>')
+            if dp != -1:
+                v = v[dp + 11:]
+                rs = StringIO()
+                rs.write(v)
+                rs.seek(0)
+                ftp.storbinary('STOR ' + fis[0][:-1], rs)
+                ok_handled.append(fis[0][:-1])
+            else:
+                error_handled.append(fis[0][:-1])
+        else:
+            print(fis[1])
+            not_handled.append(fis[0][:-1])
+    return ok_handled, not_handled, error_handled
+
+ftp = auth()
+#oh, nh, eh = drop_by_list(ftp, 'E:\Grive\BigData\etl\smm\websitescan_17_09_24.txt')
+#oh, nh, eh = drop_by_list(ftp, 'E:\Grive\BigData\etl\smm\websitescan_17_10_01.txt')
+oh, nh, eh = drop_by_list(ftp, 'E:\Grive\BigData\etl\smm\websitescan_17_12_01.txt')
+#oh, nh, eh = drop_by_list(ftp, 'E:\Grive\BigData\etl\smm\wtest.txt')
+print(oh)
+print(len(oh))
+print(eh)
+print(len(eh))
+print(nh)
+print(len(nh))

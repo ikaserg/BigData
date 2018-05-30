@@ -1,0 +1,2 @@
+def gen_password():
+    psw_chars = ['a','b','c','d','e']

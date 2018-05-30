@@ -1,0 +1,4 @@
+select count(*)
+  from social.users_login t
+ group by t.user_id
+

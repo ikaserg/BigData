@@ -1,0 +1,23 @@
+import string
+import sys
+import collections
+import random
+import datetime
+import os
+
+
+def gen_password(n):
+    filename = 'passwords.txt'
+    small = string.ascii_lowercase
+    big = string.ascii_uppercase
+    spec = '!@#$%&*?^'
+    digits = string.digits
+    all_symbols = spec + digits + string.ascii_letters
+    psw = ''
+    for x in xrange(0, n):
+        psw = psw + all_symbols[random.randint(0, len(all_symbols))]
+    return psw
+
+print gen_password(10)
+
+

@@ -1,0 +1,1 @@
+/autoshcool/layouts/joomla/content/info_block/block.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND

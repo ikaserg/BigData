@@ -1,0 +1,3 @@
+/grininanet/newgrinina/administrator/components/com_categories/controller.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/libraries/joomla/image/filter/emboss.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/autoshcool/layouts/joomla/content/info_block/block.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND

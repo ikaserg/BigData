@@ -1,0 +1,5 @@
+CREATE DATABASE okdjango
+    WITH OWNER = django;
+
+GRANT ALL ON ALL TABLES IN SCHEMA public TO django;
+GRANT USAGE ON SCHEMA public TO django;

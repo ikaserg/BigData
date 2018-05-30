@@ -1,0 +1,15 @@
+grininanet/modules/mod_sysrestore/config.php rwervwervwerv 
+grininanet/templates/landing/fTnEEISJomC.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND 
+grininanet/plugins/system/easyscript17v24/easyscript17v24.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/administrator/manifests/files/gjxsyzew.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/administrator/components/com_seopult/tpawgwcx.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/administrator/components/com_admin/models/profile.php rwervwervwerv 
+grininanet/administrator/components/com_users/models/wwvuhwir.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/administrator/cache/_system/080221dca476bc06c8bf7057bf90a4d4-cache-_system-c41856bac921d8dd22d4dbed05d7923c.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND 
+grininanet/cache/com_content/080221dca476bc06c8bf7057bf90a4d4-cache-com_content-099e36b1bb3f1c93b4270e098b76ab54.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/newgrinina/administrator/modules/mod_feed/mod_feed.php rwervwervwerv 
+grininanet/newgrinina/administrator/components/com_templates/views/styles/tmpl/pmccnNbu.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/newgrinina/administrator/components/com_modules/views/positions/iJXjm.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/newgrinina/libraries/joomla/welmneyk.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/newgrinina/plugins/content/pagenavigation/gxaqdzbs.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+grininanet/components/com_contact/models/rules/bjchxdya.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND

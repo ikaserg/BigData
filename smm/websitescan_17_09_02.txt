@@ -1,0 +1,17 @@
+/grininanet/index.php: SiteLock-PHP-FILEHACKER-qp.UNOFFICIAL FOUND
+/grininanet/modules/mod_footer/tmpl/vwvmcohv.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/plugins/content/loadmodule/SyFTcE.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/cache/_system/080221dca476bc06c8bf7057bf90a4d4-cache-_system-d3814dd49c772a39e38daf10de5fbef3.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/cache/mod_menu/UvFTdllLvE.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/newgrinina/libraries/phputf8/utils/position.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/newgrinina/libraries/joomla/session/nntybwpr.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/newgrinina/plugins/content/pagenavigation/vdoczsur.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/newgrinina/plugins/finder/newsfeeds/dkubvrda.php: PHP.Mailer-9.UNOFFICIAL FOUND
+/grininanet/newgrinina/modules/mod_wrapper/otmbvtzh.php: SiteLock-PHP-EVAL_REQUEST-avra.UNOFFICIAL FOUND
+/grininanet/newgrinina/administrator/components/com_banners/views/client/flvsu.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/newgrinina/administrator/components/com_admin/views/sysinfo/EkUSpbJRt.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/newgrinina/components/com_content/helpers/route.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/libraries/joomla/cache/storage/dmjwedcf.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/debt/ulobch.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/administrator/templates/isisredsoft/AlHQZoFepr.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/administrator/cache/fof/favicon_5a6669.ico: SiteLock-PHP-FILEHACKER-hk.UNOFFICIAL FOUND

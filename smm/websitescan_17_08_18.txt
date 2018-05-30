@@ -1,0 +1,14 @@
+/grininanet/modules/mod_menu/tmpl/royptdsi.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/modules/mod_random_image/tmpl/burkayac.php: SiteLock-PHP-EVAL_REQUEST-avra.UNOFFICIAL FOUND
+/grininanet/modules/mod_syndicate/tmpl/yhijxjzt.php: PHP.Mailer-9.UNOFFICIAL FOUND
+/grininanet/templates/legal/css/gqliygaw.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/components/com_mailto/views/sent/brrugcib.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/newgrinina/modules/mod_users_latest/mod_users_latest.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/newgrinina/components/com_mailto/views/NDEjiGz.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/newgrinina/components/com_jcomments/plugins/com_javoice.plugin.php: SiteLock-PHP-EVAL_REQUEST-avhr.UNOFFICIAL FOUND
+/grininanet/libraries/joomla/filesystem/support/mrcaftjj.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/libraries/joomla/archive/bzip2.php: SiteLock-PHP-EVAL_REQUEST-avhr.UNOFFICIAL FOUND
+/grininanet/administrator/templates/hathor/html/com_installer/update/kFjJZ.php: HG.Shell.14.UNOFFICIAL FOUND
+/grininanet/administrator/components/com_installer/helpers/installer.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
+/grininanet/administrator/components/com_media/views/imageslist/tmpl/tHjDrNoY.php: SiteLock-PHP-BACKDOOR-GENERIC-yz.UNOFFICIAL FOUND
+/grininanet/layouts/joomla/tinymce/buttons/button.php: SiteLock-PHP-BACKDOOR-GENERIC-adr.UNOFFICIAL FOUND
