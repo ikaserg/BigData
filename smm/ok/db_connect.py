@@ -4,8 +4,8 @@ import db_sql
 # Соединение с базой данных
 def get_db_connect():
 	db = db_sql.db_postgres()
-	#db.connect_host('185.154.14.162', 'crm', 'etl', 'etluser')
-	db.connect_host('185.154.14.162', 'crm_test', 'etl', 'etluser')
+	db.connect_host('185.154.14.162', 'crm', 'etl', 'etluser')
+	#db.connect_host('185.154.14.162', 'crm_test', 'etl', 'etluser')
 	return db
 
 def get_db_connect_prod():
