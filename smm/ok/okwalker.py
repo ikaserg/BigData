@@ -109,6 +109,12 @@ class OkWalker(Walker):
         # open messages page
         self.driver.get(OK_MESSAGES_URL)
         last_user = 0
+
+        sql_last_updade_sel = 'select max(message_date_int) ' \
+                              '  from social.messages ' \
+                              ' where from_user_id = %(user_id)s ' \
+                              '    or to_user_id = %(user_id)s '
+
         while True:
             # Получаем список пользователей
             wrap_xpath = "//div[@id = 'hook_Block_ConversationContent']"
@@ -122,42 +128,46 @@ class OkWalker(Walker):
                 user_id = user.get_attribute('data-id').split('_')[1]
                 user.click()
                 sleep(3)
-                wrap = self.driver.find_element(By.XPATH, wrap_xpath)
-                msg_cnt = 0
-                while True:
-                    # Получение списка сообщений
-                    msgs = self.driver.find_elements(By.XPATH, msg_xpath)
-                    if len(msgs) < 4:
-                        break
-                    if len(msgs) == msg_cnt:
-                        break
-                    else:
-                        msg_cnt = len(msgs)
-                        self.driver.execute_script('arguments[0].scrollTop = 0', wrap)
-                        self.driver.execute_script('arguments[0].scrollTop = 0', wrap)
-                        sleep(3)
-                        #.location_once_scrolled_into_view
-                        #wrap.send_keys(Keys.PAGE_UP)
-                for msg in msgs:
-                    msg_info = Object()
-                    #if '__me' in msg.get_attribute('class').split(' '):
-                    msg_info.message_uuid =  msg.get_attribute('data-uuid')
-                    if msg.get_attribute('data-mine') == "true":
-                        msg_info.to_user_id = user_id
-                        msg_info.from_user_id = self.user_id
-                    else:
-                        msg_info.to_user_id = self.user_id
-                        msg_info.from_user_id = user_id
-                    msg_info.message_date = datetime.datetime.fromtimestamp(long(msg.get_attribute('data-created')) / 1000.0)
-                    msg_info.message_date_int = long(msg.get_attribute('data-created'))
-                    try:
-                        msg_info.message = msg.find_element(By.XPATH, txt_xpath).text
-                    except:
-                        msg_info.message = ''
-                    msg_info.thread_id = None
-                    print msg_info
-                    self.add_message(msg_info)
-                self.commit()
+                # Поиск последнего загруженного собщения
+                last_msg_date = self.db.do_query_all_params(sql_last_updade_sel, {'user_id': user_id})[0][0]
+                if (last_msg_date is None) or  (int(last_msg_date) <  int(user.get_attribute('data-updated'))):
+                    wrap = self.driver.find_element(By.XPATH, wrap_xpath)
+                    msg_cnt = 0
+                    while True:
+                        # Получение списка сообщений
+                        msgs = self.driver.find_elements(By.XPATH, msg_xpath)
+                        if len(msgs) < 4:
+                            break
+                        if len(msgs) == msg_cnt:
+                            break
+                        else:
+                            msg_cnt = len(msgs)
+                            self.driver.execute_script('arguments[0].scrollTop = 0', wrap)
+                            self.driver.execute_script('arguments[0].scrollTop = 0', wrap)
+                            sleep(3)
+                            #.location_once_scrolled_into_view
+                            #wrap.send_keys(Keys.PAGE_UP)
+                    for msg in msgs:
+                        msg_info = Object()
+                        #if '__me' in msg.get_attribute('class').split(' '):
+                        msg_info.message_uuid =  msg.get_attribute('data-uuid')
+
+                        if msg.get_attribute('data-mine') == "true":
+                            msg_info.to_user_id = user_id
+                            msg_info.from_user_id = self.user_id
+                        else:
+                            msg_info.to_user_id = self.user_id
+                            msg_info.from_user_id = user_id
+                        msg_info.message_date = datetime.datetime.fromtimestamp(long(msg.get_attribute('data-created')) / 1000.0)
+                        msg_info.message_date_int = long(msg.get_attribute('data-created'))
+                        try:
+                            msg_info.message = msg.find_element(By.XPATH, txt_xpath).text
+                        except:
+                            msg_info.message = ''
+                        msg_info.thread_id = None
+                        print msg_info
+                        self.add_message(msg_info)
+                    self.commit()
 
     def not_handled_users(self, user_list, rel):
         t = 6
