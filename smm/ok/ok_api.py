@@ -157,4 +157,25 @@ class OdnoklassnikiRu(sm_api.SocialNet):
 
         return 0
 
+    def collectMsgUserInfo(self, wnd = 100):
+        sql = 'select m.from_user_id '\
+              '  from social.messages m ' \
+              ' where m.from_user_id not in (select u.user_id' \
+              '                                from social.users u) ' \
+              'union ' \
+              'select m.to_user_id '\
+              '  from social.messages m ' \
+              ' where m.to_user_id not in (select u.user_id' \
+              '                              from social.users u)'
 
+        uids = [x[0] for x in self.db.do_query_all(sql)]
+
+        uid_cnt = len(uids)
+        x = 0
+        while x < uid_cnt:
+            l = min(wnd, uid_cnt - x)
+            r, ui = self.api.getUsersInfo(uids[x: x + l], self.fields)
+            self.updateUserInfo(ui)
+            x += l
+
+        return 0

@@ -28,6 +28,8 @@ import datetime
 from lxml import etree
 from io import StringIO, BytesIO
 
+import ok_api
+
 import pickle
 
 OK_FRIENDS_FILTER_URL = 'https://ok.ru/search?st.mode=Users&st.vpl.mini=false&st.onSite=on&st.grmode=Groups&st.posted=set'
@@ -41,6 +43,12 @@ class OkWalker(Walker):
     def __init__(self, db, user_name, social_id = 3, driver = None):
         self.bot_id = 1
         super(OkWalker, self).__init__(db, user_name, social_id, driver)
+
+        self.api = ok_api.OdnoklassnikiRu()
+        self.api.getDefAuth()
+        self.fields = 'first_name,last_name,gender,birthday,location,current_status,' \
+                      'current_status_id,current_status_date,url_profile,allows_anonym_access,' \
+                      'registered_date,premium'
 
         self.class_prob = 0.75
         self.vote_prob = 0.75
@@ -626,5 +634,79 @@ class OkWalker(Walker):
         btn_submit = self.driver.find_element(By.XPATH, "//div[@class = 'posting_f_r']/div[@data-action = 'submit']")
         btn_submit.click()
         #status_input.send_keys(unicode(status_text, 'utf-8'))
+
+    def updateUserInfo(self, u_info):
+        sql = 'update social.users set ' \
+              '      name = %(name)s, '\
+              '      first_name = %(first_name)s, '\
+              '      last_name = %(last_name)s, '\
+              '      gender = %(gender)s, '\
+              '      birthday = %(birthday)s, '\
+              '      birth_day = %(birth_day)s, '\
+              '      birth_month = %(birth_month)s, '\
+              '      city = %(city)s, '\
+              '      country = %(country)s, '\
+              '      current_status = %(current_status)s, '\
+              '      current_status_id = %(current_status_id)s, '\
+              '      current_status_date = %(current_status_date)s, '\
+              '      url_profile = %(url_profile)s, '\
+              '      allows_anonym_access = %(allows_anonym_access)s, '\
+              '      registered_date = %(registered_date)s, '\
+              '      premium = %(premium)s, '\
+              '      update_date = now() ' \
+              ' where social_net_id  = %(social_net_id)s '\
+              '   and user_id = %(user_id)s '\
+
+        for x in u_info:
+            #try:
+            self.db.exec_query_params(sql,
+                                      {'name': self.extract_fullname(x),
+                                       'first_name': self.val(x, 'first_name'),
+                                       'last_name': self.val(x, 'last_name'),
+                                       'gender': 1 if self.val(x, 'gender') == 'male' else 2,
+                                       'birthday': self.extract_birthday(x),
+                                       'birth_day': self.extract_birth_day(x),
+                                       'birth_month': self.extract_birth_month(x),
+                                       'city': self.val(self.val(x, 'location'), 'city'),
+                                       'country': self.val(self.val(x, 'location'), 'countryName'),
+                                       'current_status': self.val(x, 'current_status'),
+                                       'current_status_id': self.val(x, 'current_status_id'),
+                                       'current_status_date': self.val(x, 'current_status_date'),
+                                       'url_profile': self.val(x, 'url_profile'),
+                                       'allows_anonym_access': 1 if self.val(x, 'allows_anonym_access') == 'true' else 0,
+                                       'registered_date': self.val(x, 'registered_date'),
+                                       'premium': 1 if self.val(x, 'premium') == 'true' else 0,
+                                       'social_net_id': self.api.social_id, 'user_id': self.val(x, 'uid')})
+            #except:
+            #    print 'error'
+            #    print self.val(x, 'birthday')
+            #    print self.extract_birth_day(x)
+            #    print self.extract_birth_month(x)
+            #    print self.val(x, 'uid')
+
+        self.db.exec_query('commit')
+        return 0
+
+    def collectMsgUserInfo(self, wnd = 100):
+        sql = 'select m.from_user_id '\
+              '  from social.messages m ' \
+              ' where m.from_user_id not in (select u.user_id' \
+              '                                from social.users u) ' \
+              'union ' \
+              'select m.to_user_id '\
+              '  from social.messages m ' \
+              ' where m.to_user_id not in (select u.user_id' \
+              '                              from social.users u)'
+
+        uids = [x[0] for x in self.db.do_query_all(sql)]
+
+        uid_cnt = len(uids)
+        x = 0
+        while x < uid_cnt:
+            l = min(wnd, uid_cnt - x)
+            r, ui = self.api.getUsersInfo(uids[x: x + l], self.fields)
+            self.updateUserInfo(ui)
+            x += l
+
 
 
