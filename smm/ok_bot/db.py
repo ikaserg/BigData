@@ -6,8 +6,7 @@ def get_db_connect():
 	return psycopg2.connect("dbname='smtrade' user='smtrade' password='smtrade'")
 
 #  Загрузка файла
-def load_file(file_name, file_cont, db_conn):
-	
+#def load_file(file_name, file_cont, db_conn):
 
 def main():
 	conn = get_db_connect()
