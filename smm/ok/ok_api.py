@@ -22,7 +22,9 @@ class OdnoklassnikiRu(sm_api.SocialNet):
 
     def getDefAuth(self):
         self.token = 'tkn1UI4z0QIiVWlVELixiRAqYne564oqLcs5OrwUKq0RgvHEnpxUhoChw4fQIv4EF3sc9'
+        self.token = 'tkn1cxdBGlAe0CaSOjiiAr13vytEFw0dolOc0n93HWDcNZhlSjjLIxzqhDZjOmKc1ERw6'
         self.session_secret_key = '3348a373acb5ecaead2b861b41fee11f'
+        self.session_secret_key = 'c5e35afa5a87bddbeba0b6908276b5f4'
         self.user_id = 574248559595
         self.base_url = 'http://api.ok.ru/fb.do?'
         self.application_id = 1247354624

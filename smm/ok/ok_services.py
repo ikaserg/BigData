@@ -70,6 +70,115 @@ class OkServices():
         ln = self.val(ui, last_name)
         return ' '.join([self.xstr(fn), self.xstr(ln)])
 
+    def appendMsgUsers(self):
+        sql = 'select user_id ' \
+              'from( ' \
+              'select m.from_user_id as user_id' \
+              '  from social.messages m ' \
+              ' where m.from_user_id not in (select ui.user_id ' \
+              '                                from social.users ui ' \
+              '                               where ui.social_net_id = %(social_net_id)s ) ' \
+              '   and m.social_net_id = %(social_net_id)s '\
+              'union ' \
+              'select m.to_user_id ' \
+              '  from social.messages m ' \
+              ' where m.to_user_id not in (select ui.user_id ' \
+              '                              from social.users ui ' \
+              '                             where ui.social_net_id = %(social_net_id)s ) '\
+              '   and m.social_net_id = %(social_net_id)s ' \
+              ') t ' \
+              'group by user_id'
+
+        self.handleUsersSql(sql, self.insertUsers)
+
+    def handleUsersSql(self, sql, handler, wnd = 100):
+        # Получение списка id пользователей
+        uids = self.db.do_query_all_params(sql, {'social_net_id': self.api.social_id})
+
+        # Обработка полученного списка с окном не более wnd
+        uid_cnt = len(uids)
+        x = 0
+        while x < uid_cnt:
+            l = min(wnd, uid_cnt - x)
+            # Получение информации о пользователях
+            r, ui = self.api.getUsersInfo([i[0] for i in uids[x: l]], self.fields)
+
+            # Вызов обработчика
+            handler(ui)
+            x = x + l
+        return 0
+
+
+    def insertUsers(self, u_info):
+        sql = 'insert into social.users(  ' \
+              '      social_net_id, ' \
+              '      user_id, ' \
+              '      name, '\
+              '      first_name, '\
+              '      last_name, '\
+              '      gender, '\
+              '      birthday, '\
+              '      birth_day, '\
+              '      birth_month, '\
+              '      city, '\
+              '      country, '\
+              '      current_status, '\
+              '      current_status_id, '\
+              '      current_status_date, '\
+              '      url_profile, '\
+              '      allows_anonym_access, '\
+              '      registered_date, '\
+              '      premium, '\
+              '      create_date, ' \
+              '      update_date ' \
+              ') ' \
+              'values(' \
+              '      %(social_net_id)s, ' \
+              '      %(user_id)s, ' \
+              '      %(name)s, '\
+              '      %(first_name)s, '\
+              '      %(last_name)s, '\
+              '      %(gender)s, '\
+              '      %(birthday)s, '\
+              '      %(birth_day)s, '\
+              '      %(birth_month)s, '\
+              '      %(city)s, '\
+              '      %(country)s, '\
+              '      %(current_status)s, '\
+              '      %(current_status_id)s, '\
+              '      %(current_status_date)s, '\
+              '      %(url_profile)s, '\
+              '      %(allows_anonym_access)s, '\
+              '      %(registered_date)s, '\
+              '      %(premium)s, '\
+              '      now(), ' \
+              '      now() ' \
+              ')' \
+
+        for x in u_info:
+            #try:
+            self.db.exec_query_params(sql,
+                                      {'name': self.extract_fullname(x),
+                                       'first_name': self.val(x, 'first_name'),
+                                       'last_name': self.val(x, 'last_name'),
+                                       'gender': 1 if self.val(x, 'gender') == 'male' else 2,
+                                       'birthday': self.extract_birthday(x),
+                                       'birth_day': self.extract_birth_day(x),
+                                       'birth_month': self.extract_birth_month(x),
+                                       'city': self.val(self.val(x, 'location'), 'city'),
+                                       'country': self.val(self.val(x, 'location'), 'countryName'),
+                                       'current_status': self.val(x, 'current_status'),
+                                       'current_status_id': self.val(x, 'current_status_id'),
+                                       'current_status_date': self.val(x, 'current_status_date'),
+                                       'url_profile': self.val(x, 'url_profile'),
+                                       'allows_anonym_access': 1 if self.val(x, 'allows_anonym_access') == 'true' else 0,
+                                       'registered_date': self.val(x, 'registered_date'),
+                                       'premium': 1 if self.val(x, 'premium') == 'true' else 0,
+                                       'social_net_id': self.api.social_id,
+                                       'user_id': self.val(x, 'uid')})
+        self.db.exec_query('commit')
+
+
     def updateUserInfo(self, u_info):
         sql = 'update social.users set ' \
               '      name = %(name)s, '\
@@ -317,33 +426,33 @@ class OkServices():
                 self.db.exec_query('commit')
 
 
-def main():
-    # Получаем соединение с БД
-    db = db_connect.get_db_connect_prod()
+#def main():
+#    # Получаем соединение с БД
+#    db = db_connect.get_db_connect_prod()
+#
+#    # Создаем класс api
+#    ok = ok_api.OdnoklassnikiRu()
+#    ok.getDefAuth()
 
-    # Создаем класс api
-    ok = ok_api.OdnoklassnikiRu()
-    ok.getDefAuth()
 
-
-    ok_srv = OkServices(ok, db)
-
-    # Регистрация пользователей online
-    ok_srv.collect_online_users()
-
-    # Сбор информации по пользователям
-    ok_srv.addNewFriends()
-    ok_srv.collectNewInfo()
-
-    ok.getAndrewAuth()
-
+#    ok_srv = OkServices(ok, db)
 
     # Регистрация пользователей online
-    ok_srv.collect_online_users()
+#    ok_srv.collect_online_users()
 
     # Сбор информации по пользователям
-    ok_srv.addNewFriends()
-    ok_srv.collectNewInfo()
+#    ok_srv.addNewFriends()
+#    ok_srv.collectNewInfo()
 
-main()
+#    ok.getAndrewAuth()
+
+
+    # Регистрация пользователей online
+#    ok_srv.collect_online_users()
+
+    # Сбор информации по пользователям
+#    ok_srv.addNewFriends()
+#    ok_srv.collectNewInfo()
+
+#main()
 
