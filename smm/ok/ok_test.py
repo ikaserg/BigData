@@ -1,6 +1,6 @@
 import ok_api
 import db_connect
-import ok_friend_stat
+import ok_services
 
 def main():
     ok = ok_api.OdnoklassnikiRu()
@@ -8,7 +8,7 @@ def main():
 
     db = db_connect.get_db_connect()
 
-    ok_srv = ok_friend_stat.OkServices(ok, db)
+    ok_srv = ok_services.OkServices(ok, db)
 
     ok_srv.addNewFriends()
     ok_srv.collectNewInfo()
