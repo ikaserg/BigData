@@ -126,12 +126,14 @@ class OkWalker(Walker):
         while True:
             # Получаем список пользователей
             wrap_xpath = "//div[@id = 'hook_Block_ConversationContent']"
+            users_wrap_xpath = "//div[@id = 'hook_Block_ConversationsList']"
             xpath = "//div[@id = 'hook_Block_ConversationsList']//div[@tsid = 'conversation_item']"
             #xpath = "//div[@id = 'hook_Block_ConversationsList']//div[starts-with(@id, 'hook_Block_PRIVATE_')]"
             msg_xpath = "//div[@id = 'hook_Block_ConversationContent']//div[starts-with(@id, 'PRIVATE_')]"
             txt_xpath = ".//span[starts-with(@id, 'hook_ActivateLinks_')]"
             show_more_xpath = "//div[@id = 'hook_Block_ConversationsList']//a[@data-show-more='link-show-more']"
             users = self.driver.find_elements(By.XPATH, xpath)
+            users_wrap =  self.driver.find_element(By.XPATH, users_wrap_xpath)
             for user in users[last_user:]:
                 last_user += 1
                 user_id = user.get_attribute('data-id').split('_')[1]
@@ -178,6 +180,7 @@ class OkWalker(Walker):
                         self.add_message(msg_info)
                     self.commit()
             # поиск кнопки "Показать еще"
+            self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', users_wrap)
             show_more = self.driver.find_element(By.XPATH, show_more_xpath)
             sleep(4)
             show_more.click()
