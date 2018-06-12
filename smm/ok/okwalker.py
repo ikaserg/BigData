@@ -134,6 +134,11 @@ class OkWalker(Walker):
             show_more_xpath = "//div[@id = 'hook_Block_ConversationsList']//a[@data-show-more='link-show-more']"
             users = self.driver.find_elements(By.XPATH, xpath)
             users_wrap =  self.driver.find_element(By.XPATH, users_wrap_xpath)
+
+            show_more = self.driver.find_element(By.XPATH, show_more_xpath)
+            sleep(4)
+            self.driver.execute_script("return arguments[0].scrollIntoView(true);", show_more)
+
             for user in users[last_user:]:
                 last_user += 1
                 user_id = user.get_attribute('data-id').split('_')[1]
@@ -180,10 +185,10 @@ class OkWalker(Walker):
                         self.add_message(msg_info)
                     self.commit()
             # поиск кнопки "Показать еще"
-            self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', users_wrap)
-            show_more = self.driver.find_element(By.XPATH, show_more_xpath)
-            sleep(4)
-            show_more.click()
+            #self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', users_wrap)
+            #show_more = self.driver.find_element(By.XPATH, show_more_xpath)
+            #sleep(4)
+            #show_more.click()
 
 
     def not_handled_users(self, user_list, rel):
