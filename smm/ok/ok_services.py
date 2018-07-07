@@ -77,14 +77,16 @@ class OkServices():
               '  from social.messages m ' \
               ' where m.from_user_id not in (select ui.user_id ' \
               '                                from social.users ui ' \
-              '                               where ui.social_net_id = %(social_net_id)s ) ' \
-              '   and m.social_net_id = %(social_net_id)s '\
+              '                               where ui.social_net_id = %(social_net_id)s ' \
+              '                                 and ui.user_id is not null ) ' \
+              '   and m.social_net_id = %(social_net_id)s ' \
               'union ' \
               'select m.to_user_id ' \
               '  from social.messages m ' \
               ' where m.to_user_id not in (select ui.user_id ' \
               '                              from social.users ui ' \
-              '                             where ui.social_net_id = %(social_net_id)s ) '\
+              '                             where ui.social_net_id = %(social_net_id)s ' \
+              '                               and ui.user_id is not null ) '\
               '   and m.social_net_id = %(social_net_id)s ' \
               ') t ' \
               'group by user_id'
