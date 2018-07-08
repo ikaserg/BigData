@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import math
 import datetime
 from ok_bot import OkBot
 from db_sql import filed_by_names
@@ -29,6 +30,12 @@ class Periods(object):
         else:
             return dt + datetime.timedelta(days = shift)
 
+    def add_10_minutes(self, dt, shift):
+        if dt is None:
+            return None
+        else:
+            return dt + datetime.timedelta(minutes = shift * 10)
+
     def add_hour(self, dt, shift):
         if dt is None:
             return None
@@ -40,6 +47,12 @@ class Periods(object):
             return None
         else:
             return dt.replace(minute=0, second=0, microsecond=0)
+
+    def trunc_10_minute(self, dt):
+        if dt is None:
+            return None
+        else:
+            return dt.replace(minute=math.trunc(dt.minute * 10) / 10, second=0, microsecond=0)
 
     def current_day(self, dt):
         return datetime.datetime.now().replace(hour = 0, minute=0, second=0, microsecond=0)
