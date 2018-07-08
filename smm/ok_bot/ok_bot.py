@@ -14,9 +14,19 @@ class OkBot(Bot):
         self.walker = OkWalker(self.db, self.user_name)
         self.social_srv =  ok_services.OkServices(ok_api.OdnoklassnikiRu(), db)
         self.social_srv.api.getDefAuth()
+        self.is_logged = False
 
     def login(self):
         self.walker.login()
+        self.is_logged = True
+
+    def load_all_message(self):
+        if not self.is_logged:
+            self.login()
+        self.walker.load_all_message(20, self.walker.was_read)
+        #загрузка пользователнй сообщений
+        self.social_srv.appendMsgUsers()
+
 
     def daily_bot(self):
         #проверка сообщений
