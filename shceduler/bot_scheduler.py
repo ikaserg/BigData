@@ -83,7 +83,8 @@ class BotScheduler(object):
                         '  from schedule.scheduled_bot_action sa ' \
                         ' inner join  schedule.act_periods ap on  ap.act_period_id = sa.act_period_id ' \
                         ' where now() between sa.start_date and sa.end_date ' \
-                        '   and sa.group_id = %(group_id)s '\
+                        '   and sa.group_id = %(group_id)s ' \
+                        ' order by sa.act_order '\
 
         self.exe_sql = 'insert into schedule.executed_bot_action(bot_action_id, bot_id, exe_date, result_id, result_message) ' \
                        ' values( %(bot_action_id)s , %(bot_id)s, %(exe_date)s , %(result_id)s , %(result_message)s  )'
