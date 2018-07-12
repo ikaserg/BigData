@@ -2,6 +2,7 @@
 import sys
 import math
 import datetime
+from time import sleep
 from ok_bot import OkBot
 from db_sql import filed_by_names
 from db_connect import get_db_connect
@@ -139,5 +140,6 @@ def main():
     sch = BotScheduler(db, 1)
     while True:
         sch.check()
+        sleep(60)
 
 main()
