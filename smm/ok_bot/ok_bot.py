@@ -5,6 +5,10 @@ from db_connect import get_db_connect
 from bot import Bot
 import ok_api
 import ok_services
+import datetime
+
+from random import randint
+from random import random
 
 class OkBot(Bot):
     def __init__(self, db, user_name):
@@ -20,6 +24,47 @@ class OkBot(Bot):
         if not self.is_logged:
             self.walker.login()
             self.is_logged = True
+
+    def find_random_user(self):
+        if not self.is_logged:
+            self.login()
+        time_start = datetime.datetime.now().time()
+        walked_cnt = 0
+        plan_cnt = 3
+        zero_max = 15
+
+        add_prob = 1.75
+        if random() < add_prob:
+            add_friend = 1
+        else:
+            add_friend = 0
+
+        zero_cnt = 0
+
+        while True:
+            age = randint(25, 65)
+            wd = randint(1, 3)
+            if add_friend == 1:
+                walk_add, add_friend = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='Рязань',
+                                                                  add_to_friends=add_friend, gender='f', walk_plan=plan_cnt - walked_cnt,
+                                                                  limit_stop=True )
+                if add_friend == 0:
+                    break
+            else:
+                walk_add, add_friend = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='Рязань',
+                                                                  walk_plan=plan_cnt - walked_cnt)
+            walked_cnt += walk_add
+
+            if walk_add == 0:
+                zero_cnt += 1
+            else:
+                zero_cnt = 0
+
+            if zero_cnt >= zero_max:
+                break
+
+            if walked_cnt >= plan_cnt:
+                break
 
     def load_all_message(self):
         if not self.is_logged:
