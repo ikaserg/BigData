@@ -17,8 +17,9 @@ class OkBot(Bot):
         self.is_logged = False
 
     def login(self):
-        self.walker.login()
-        self.is_logged = True
+        if not self.is_logged:
+            self.walker.login()
+            self.is_logged = True
 
     def load_all_message(self):
         if not self.is_logged:
