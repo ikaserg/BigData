@@ -32,6 +32,18 @@ import ok_api
 
 import pickle
 
+INV_ERROR = -1
+INV_OK = 0
+INV_ALREADY = 2
+INV_TEMPORARY_CANNONT = 3
+
+REL_FRIEND = 1
+REL_VISIT = 2
+REL_PLAN_INVITE = 3
+REL_INVITE = 4
+REL_FRIEND_OUT = 6
+
+
 OK_FRIENDS_FILTER_URL = 'https://ok.ru/search?st.mode=Users&st.vpl.mini=false&st.onSite=on&st.grmode=Groups&st.posted=set'
 OK_MESSAGES_URL = 'https://ok.ru/messages'
 OK_MESSAGES_URL = 'https://ok.ru/messages'
@@ -52,7 +64,7 @@ class OkWalker(Walker):
 
         self.class_prob = 0.75
         self.vote_prob = 0.75
-        self.message_prob = 0.6
+        self.message_prob = 0
         self.add_friend_set_id = 1
 
 
@@ -206,6 +218,21 @@ class OkWalker(Walker):
             #sleep(4)
             #show_more.click()
 
+    def get_last_status(self, user_id):
+        sql = 'select max(t.relation_type_id)' \
+              '  from social.user_relations t ' \
+              ' where t.social_net_id = %(social)s' \
+              '   and t.user_id = %(user_id)s' \
+              '   and t.rel_user_id = %(rel_user_id)s'\
+              '   and t.relation_date = (select max(t_i.relation_date) ' \
+              '                            from social.user_relations t_i ' \
+              '                           where t_i.social_net_id = t.social_net_id ' \
+              '                             and t_i.user_id = t.user_id ' \
+              '                             and t_i.rel_user_id = t.rel_user_id)'
+        return self.db.do_query_all_params(sql, {'user_id': self.user_id, 'social': self.social_id,
+                                                               'rel_user_id': user_id})[0][0]
+
+
 
     def not_handled_users(self, user_list, rel):
         t = 6
@@ -259,7 +286,7 @@ class OkWalker(Walker):
         class_hook = ava.find_elements(By.XPATH, ".//div[starts-with(@id, 'hook_Block_')]")
         if len(class_hook) > 0:
             # проверка нет ли уже класса
-            elem = class_hook[0].find_elements(By.XPATH, ".//span[contains(@class, 'tico__12')]")[0]
+            elem = class_hook[0].find_elements(By.XPATH, ".//span[contains(@class, 'tico')]")[0]
             if elem.text == u'Вы':
                 # alredy has class
                 return 2
@@ -318,33 +345,38 @@ class OkWalker(Walker):
         self.send_message(ms[i - 1][1])
         return ms[i - 1][2]
 
+    # Вовращает значение
+    # -1 - ошибка при добавлении
+    # 0 - успешно добавлено
+    # 3 - временно нельзя добавить
     def send_invite(self):
         # Find add user button
-        btn = self.driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
+        btn = self.driver.find_elements(By.XPATH,
+                                        u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         if len(btn) == 0:
-            btn = self.driver.find_elements(By.XPATH,
-                                            u"//div[contains(@class, 'u-menu_li__pro')]/a[text()='Добавить в друзья']")
+            btn = self.driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
+            if len(btn) == 0:
+                btn = self.driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a[text()='Добавить в друзья']")
         if len(btn) > 0:
             btn[0].click()
             sleep(2)
             err = self.driver.find_elements(By.XPATH, "//div[@id='notifyPanel_msgContainer']")
             if len(err) > 0:
                 #Can not add
-                return 3
+                return INV_TEMPORARY_CANNONT
             else:
                 # find add confirmation
                 res = self.driver.find_elements(By.XPATH,
-                                                u"//div[contains(@class, 'u-menu_li__pro')]//span[text()='Запрос отправлен']")
+                                                u'//div[contains(@data-l, "tc_friend")]/ul/li/div/span[contains(@class, "u-menu_a")]')
                 if len(res) > 0:
                     #succes add
-                    return 0
+                    if res[0].text == u"Запрос отправлен":
+                        return INV_OK
                 else:
-                    return -1
-
-
+                    return INV_ERROR
         else:
             # Alredy voted
-            return 2
+            return INV_ALREADY
 
     def send_message(self, msg_text):
         sleep(3)
@@ -372,6 +404,12 @@ class OkWalker(Walker):
         self.driver.execute_script("window.scrollTo(0, {0} );".format(scroll_y))
         sleep(3)
         obj.click()
+
+    def center_scroll(self, obj):
+        y = self.driver.execute_script("return window.scrollY;")
+        h = self.driver.get_window_size()['height'] / 2
+        scroll_y = max(obj.location['y'] - h, 0)
+        self.driver.execute_script("window.scrollTo(0, {0} );".format(scroll_y))
 
     def fill_filter(self, gender = None, from_age = None, till_age = None, location = None, on_site = None,
                        walk_plan = None, url = None):
@@ -471,11 +509,51 @@ class OkWalker(Walker):
             self.driver.close();
             self.driver.switch_to_window(self.driver.window_handles[0])
 
+    # user - обертка пользователя со страницы поиска
+    # main_window - handle главного окна (список поиска)
+    # try_cnt - количество попыток нажатия добавить в друья
+    def add_to_friend(self, user, main_window, try_cnt):
+        rel_date = datetime.datetime.now()
+        self.open_new_tab_user_link(user, main_window)
+        sleep(3)
+        # Несколько попыток нажать кнопку добавить в друзья
+        for i in (0, try_cnt):
+            add_res = self.send_invite()
+            if add_res < 0:
+                self.close_last_windows()
+                self.open_new_tab_user_link(user, main_window)
+                sleep(3)
+            else:
+                break
+
+        if add_res == INV_OK:
+            # Проверка ставить ли класс
+            if random() < self.class_prob:
+                user['p3'] = self.avatar_class() + 1
+            else:
+                user['p3'] = 0
+            # Проверка ставить ли оценку
+            if random() < self.vote_prob:
+                user['p4'] = self.avatar_vote() + 1
+            else:
+                user['p4'] = 0
+            # Проверка посылать ли сообщение
+            if random() < self.message_prob:
+                user['p5'] = self.select_message(self.add_friend_set_id)
+            else:
+                user['p5'] = 0
+
+        if (add_res == INV_ALREADY) or (add_res == INV_OK):
+            self.add_users_rel([user], rel_date)
+        self.close_tab(main_window)
+        return add_res
+
+
     # Возвразает 2 значения
     #   - количество добавленных элементов
     #   - признак достижения лимита добавлений
     def find_user_list(self, gender = None, from_age = None, till_age = None, location = None, on_site = None,
-                       walk_plan = 30, add_to_friends = 0, url = OK_FRIENDS_FILTER_URL, limit_stop = False):
+                       walk_plan = 30, add_to_friends = 0, url = OK_FRIENDS_FILTER_URL):
         # Формирование запроса
         #url = 'https://ok.ru/search?st.mode=Users&st.vpl.mini=false&st.grmode=Groups&st.posted=set'
 
@@ -492,16 +570,20 @@ class OkWalker(Walker):
             last_user = 0
             page_down_cnt = 0
             page_down_max_cnt = 15
-
+            try_cnt = 5
+            inv_cnt = 0
             self.fill_filter(gender, from_age, till_age, location, on_site, walk_plan, url)
 
-            while True:
-                # получение списка пользователей
-                users_dom = etree.parse(StringIO(self.driver.find_element(By.XPATH, "//div[@id = 'gs_result_list']").get_attribute('outerHTML')),
-                                              parser)
-                rel_date = datetime.datetime.now()
-                users = users_dom.xpath('//body/div/div')
+            run = True
+            limit_stop = False
 
+            while run:
+                # получение списка пользователей
+                #users_dom = etree.parse(StringIO(self.driver.find_element(By.XPATH, "//div[@id = 'gs_result_list']").get_attribute('outerHTML')),
+                #                              parser)
+                rel_date = datetime.datetime.now()
+                #users = users_dom.xpath('//body/div/div')
+                users = self.driver.find_elements(By.XPATH, "//div[@id = 'gs_result_list']//div[contains(@class, 'gs_result_i_w')]")
 
                 # get user id list
                 if len(users) == last_user:
@@ -512,123 +594,65 @@ class OkWalker(Walker):
 
                 for x in users[last_user:]:
                     last_user +=1
+                    #if last_user % 2 == 0:
+                    # Скролл каждые два пользователя
+                    self.center_scroll(x)
                     item = {}
-                    item['id'] = int(x.attrib['data-l'].split('\\,')[3])
-                    item['p1'] = self.getIntWordByInd(x.xpath('.//div[contains(@class, "gs_result_i_f-list")]/a/text()'), ind = -1)
-                    # common fiends
-                    item['p2'] = self.getIntWordByInd(x.xpath('.//span[contains(@class, "gs_group_friends")]/span/text()'), ind = 0)
-                    item['p3'] = None
-                    item['p4'] = None
-                    item['p5'] = None
-                    node_frnd = x.xpath('.//div[starts-with(@id, "hook_SwitchLayout_")]')
-                    if len(node_frnd) == 0:
-                        node = x.xpath('.//div[@class = "icbtn_iconLabel"]')
-                        if len(node) == 0:
-                            item['rel'] = 1
-                            us_friends.append(item)
+                    # Получение id пользователя
+                    x_tmp = x.find_element(By.XPATH,
+                                           './/div[contains(@class, "gs_result_i_t")]//div[contains(@class, "ellip")]/a')
+                    item['id'] = int(x_tmp.get_attribute('data-l').split(',')[11])
+                    last_rel = self.get_last_status(item['id'])
+                    add_res = 0
+                    # Проверка наличия кнопки добавить в друзья
+                    if (last_rel is None or last_rel <> REL_FRIEND_OUT) and \
+                       (len(x.find_elements(By.XPATH,'.//div[starts-with(@id, "hook_Block_PS_User_")]/a[contains(@href, "cmd=AddFriendButton")]/span')) > 0):
+                        # Получаем атрибуты друга
+                        # photo count
+                        x_tmp = x.find_elements(By.XPATH, './/div[contains(@class, "gs_result_i_photos")]/a[@class="al"]')
+                        if len(x_tmp) > 0:
+                            item['p1'] = x_tmp[0].text.split(u' ')[-1]
                         else:
-                            item['rel'] = 2
-                            us_invated.append(item)
+                            item['p1'] = None
+                            # common fiends
+                        x_tmp = x.find_elements(By.XPATH, './/div[@class = "card-list-sm_hld"]/span/a')
+                        if len(x_tmp) > 0:
+                            item['p2'] = x_tmp[0].text.split(u' ')[0]
+                        else:
+                            item['p2'] = None
+                        item['p3'] = None
+                        item['p4'] = None
+                        item['p5'] = None
+                        item['rel'] = REL_FRIEND
+                        add_res = self.add_to_friend(item, self.driver.current_window_handle, try_cnt)
+                        if add_res == INV_OK:
+                            self.add_users_rel([item], rel_date)
+                            inv_cnt = inv_cnt + 1
+                        elif add_res == INV_TEMPORARY_CANNONT:
+                            run = False
+                            limit_stop = True
+                            break
                     else:
-                        node_frnd_btn = node_frnd[0].xpath('.//span[starts-with(@class, "button-pro")]')
-                        if len(node_frnd_btn) == 0:
-                            # приглашение выслано
-                            item['rel'] = 2
-                            us_invated.append(item)
-                        else:
-                            # можно пригласить
-                            item['rel'] = 3
-                            us_goto.append(item)
-                            us_send_invate.append(item)
+                        # Проверка наличия вылсанного приглашения
 
-
-                #a[starts-with(@href, "buy.php/")]
-                # Добавление друзей
-                not_handled = self.not_handled_users([ int(x['id']) for x in us_friends], [1])
-                self.add_users_rel([x for x in us_friends if x['id'] in not_handled], rel_date)
-                # Добавление наличия приглашения
-                not_handled = self.not_handled_users([ int(x['id']) for x in us_invated], [2, 4])
-                self.add_users_rel([x for x in us_invated if x['id'] in not_handled], rel_date)
-                # Запланировано посещение
-                not_handled = self.not_handled_users([ int(x['id']) for x in us_goto], [1, 2, 3, 4])
-                us_goto = [x for x in us_goto if x['id'] in not_handled]
-                # Запланировно добавление в друзья
-                not_handled = self.not_handled_users([ int(x['id']) for x in us_send_invate], [1, 3])
-                us_send_invate = [x for x in us_send_invate if x['id'] in not_handled]
-
-                if len(us_goto) < walk_plan:
-                    body = self.driver.find_element(By.TAG_NAME, 'body')
-                    body.send_keys(Keys.PAGE_DOWN)
-                    # Проверка не появилась ли кнопка показать больше
-                    elem = self.driver.find_elements(By.XPATH, "//a[starts-with(@id,  'nohook_') and contains(@class, 'link-show-more')]")
-                    if len(elem) > 0:
-                        if elem[0].is_displayed():
-                            elem[0].click()
-                else:
+                        if (len(x.find_elements(By.XPATH,'.//div[starts-with(@id, "hook_Block_PS_User_")]/span[contains(@class, "lstp-t")]')) > 0) or\
+                            (len(x.find_elements(By.XPATH,
+                                                 './/div[contains(@class, "gs_result_i")]/div/div[contains(@class, "lstp-t")]')) > 0):
+                            # Приглашение выслано
+                            item['rel'] = REL_INVITE
+                        elif len(x.find_elements(By.XPATH,'.//div[contains(@class, "gs_result_i")]//span[@data-aid="LS_Relation"]')) > 0:
+                            # Уже в друзьях
+                            item['rel'] = REL_FRIEND
+                        if (last_rel is None) or (last_rel <> item['rel']):
+                            item['p1'] = None
+                            item['p2'] = None
+                            item['p3'] = None
+                            item['p4'] = None
+                            item['p5'] = None
+                            self.add_users_rel([item], rel_date)
+                if inv_cnt >= walk_plan:
+                    run = False
                     break
-
-            main_window = self.driver.current_window_handle
-
-            for user in [u for u in us_goto if u['id'] not in [x['id'] for x in us_friends]]:
-                item = copy(user)
-                item_frnd = copy(user)
-                item['rel'] = 3
-                item_frnd['rel'] = 4
-                try:
-                    #Клик по элементу
-                    rel_date = datetime.datetime.now()
-                    self.open_new_tab_user_link(user, main_window)
-                    sleep(3)
-                    #tabs2 = self.driver
-
-                    # Проверка нужно ли приглашать в друзья
-                    if add_to_friends == 1:
-                        # Click to add to friend
-                        for i in (0,2):
-                            add_res = self.send_invite()
-                            if add_res < 0:
-                                self.close_last_windows()
-                                self.open_new_tab_user_link(user, main_window)
-                                sleep(3)
-                            else:
-                                break
-                        if add_res == 3:
-                            add_to_friends = 0
-                            if limit_stop:
-                                self.add_users_rel([item], rel_date)
-                                self.log_friend_list_end(len(us_goto), add_to_friends)
-                                return len(us_goto), add_to_friends
-                        else:
-                            if add_res == 0:
-                                # Проверка ставить ли класс
-                                if random() < self.class_prob:
-                                    item_frnd['p3'] = self.avatar_class() + 1
-                                else:
-                                    item_frnd['p3'] = 0
-                                # Проверка ставить ли оценку
-                                if random() < self.vote_prob:
-                                    item_frnd['p4'] = self.avatar_vote() + 1
-                                else:
-                                    item_frnd['p4'] = 0
-                                # Проверка посылать ли сообщение
-                                if random() < self.message_prob:
-                                    item_frnd['p5'] = self.select_message(self.add_friend_set_id)
-                                else:
-                                    item_frnd['p5'] = 0
-
-                                self.add_users_rel([item_frnd], rel_date)
-
-
-                    self.close_tab(main_window)
-                    # write to DB
-                    self.add_users_rel([item], rel_date)
-                except Exception as err:
-                    self.logger.write_execption(WALKER_FIENDS, err,'')
-                    self.close_last_windows()
-                else:
-                    # close all windows except first
-                    print sys.exc_info()
-                    self.close_last_windows()
 
             self.log_friend_list_end(len(us_goto), add_to_friends)
         except Exception as err:
@@ -639,7 +663,7 @@ class OkWalker(Walker):
             print sys.exc_info()
             self.close_last_windows()
 
-        return len(us_goto), add_to_friends
+        return inv_cnt, add_to_friends, limit_stop
 
     def goto_main_page(self):
         logo = self.driver.find_element(By.XPATH, "//a[@id = 'toolbar_logo_id']")

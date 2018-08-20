@@ -38,20 +38,19 @@ class OkBot(Bot):
             add_friend = 1
         else:
             add_friend = 0
-
         zero_cnt = 0
 
-        while True:
+        limit_stop = False
+        while not limit_stop:
             age = randint(25, 65)
             wd = randint(1, 3)
             if add_friend == 1:
-                walk_add, add_friend = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='Рязань',
-                                                                  add_to_friends=add_friend, gender='f', walk_plan=plan_cnt - walked_cnt,
-                                                                  limit_stop=True )
+                walk_add, add_friend, limit_stop = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)',
+                                                                  add_to_friends=add_friend, gender='f', walk_plan=plan_cnt - walked_cnt )
                 if add_friend == 0:
                     break
             else:
-                walk_add, add_friend = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='Рязань',
+                walk_add, add_friend, limit_stop = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)',
                                                                   walk_plan=plan_cnt - walked_cnt)
             walked_cnt += walk_add
 
