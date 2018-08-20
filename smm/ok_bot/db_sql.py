@@ -75,7 +75,11 @@ class db_postgres(db_sql):
     def do_query_all_params(self, sql, params):
         cur = self.db_connect.cursor()
         cur.execute(sql, params)
-        return cur.fetchall()
+        if cur.rowcount > 0:
+            return cur.fetchall()
+        else:
+            return [None]
+
 
     def do_query_all_fbn_params(self, sql, params):
         cur = self.db_connect.cursor()

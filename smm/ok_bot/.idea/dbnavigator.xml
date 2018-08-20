@@ -23,7 +23,15 @@
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
     <show-object-properties value="false" />
-    <loaded-nodes />
+    <loaded-nodes>
+      <connection connection-id="94cad4b2-dc69-4d35-8a39-5da935c53ae6">
+        <schema name="etl" object-types="function, table, view" />
+        <schema name="pg_catalog" object-types="function, table, view" />
+        <schema name="public" object-types="function, table, view" />
+        <schema name="schedule" object-types="column, function, table, view" />
+        <schema name="social" object-types="column, function, table, view" />
+      </connection>
+    </loaded-nodes>
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="544ea65f-de54-44fd-9b19-10c8b821ac81">
@@ -42,7 +50,18 @@ set act_period_id = 7 where act_period_name = 'Час';
 
 ALTER TABLE act_periods ADD PRIMARY KEY (act_period_id);
 
-ALTER TABLE scheduled_bot_action ADD PRIMARY KEY (bot_action_id);]]></console>
+ALTER TABLE scheduled_bot_action ADD PRIMARY KEY (bot_action_id);
+
+select r.relation_type_id, count(*) from social.user_relations r group by r.relation_type_id;
+
+select r.* from social.user_relations r where r.rel_user_id = 444590805338;
+
+delete from schedule.executed_bot_action where exe_date > to_date('18 Aug 2018', 'DD Mon YYYY');
+
+select l.* 
+  from social.bot_log l
+ where l.log_date >to_date('18 Aug 2018', 'DD Mon YYYY') 
+ order by l.log_date desc]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
