@@ -559,6 +559,7 @@ class OkWalker(Walker):
 
         self.logger.start_event()
         self.logger.write_log(WALKER_START_FIENDS, 0, 'Start', '')
+        limit_stop = False
 
         try:
             parser = etree.HTMLParser()
@@ -575,7 +576,6 @@ class OkWalker(Walker):
             self.fill_filter(gender, from_age, till_age, location, on_site, walk_plan, url)
 
             run = True
-            limit_stop = False
 
             while run:
                 # получение списка пользователей
