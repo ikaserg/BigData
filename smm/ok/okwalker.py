@@ -652,6 +652,7 @@ class OkWalker(Walker):
                             self.add_users_rel([item], rel_date)
                 if inv_cnt >= walk_plan:
                     run = False
+                    limit_stop = True
                     break
 
             self.log_friend_list_end(len(us_goto), add_to_friends)

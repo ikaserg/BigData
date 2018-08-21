@@ -56,11 +56,11 @@ select r.relation_type_id, count(*) from social.user_relations r group by r.rela
 
 select r.* from social.user_relations r where r.rel_user_id = 444590805338;
 
-delete from schedule.executed_bot_action where exe_date > to_date('18 Aug 2018', 'DD Mon YYYY');
+delete from schedule.executed_bot_action where exe_date > to_date('19 Aug 2018', 'DD Mon YYYY');
 
 select l.* 
   from social.bot_log l
- where l.log_date >to_date('18 Aug 2018', 'DD Mon YYYY') 
+ where l.log_date >to_date('19 Aug 2018', 'DD Mon YYYY') 
  order by l.log_date desc]]></console>
     </connection>
   </component>
