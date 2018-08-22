@@ -545,7 +545,7 @@ class OkWalker(Walker):
 
         if (add_res == INV_ALREADY) or (add_res == INV_OK):
             self.add_users_rel([user], rel_date)
-        self.close_tab(main_window)
+        self.close_last_windows()
         return add_res
 
 
