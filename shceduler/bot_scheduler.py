@@ -61,8 +61,6 @@ class Periods(object):
     def do_nothing(self, dt, shift):
         return dt
 
-
-
 class BotScheduler(object):
     def __init__(self, db, group):
         self.db = db
@@ -128,8 +126,6 @@ class BotScheduler(object):
                 #self.write_executed(start_date, bot.bot_id, act.bot_action_id, 0, '')
                 #except Exception as ex:
                 #    self.write_executed(start_date, bot.bot_id, act.bot_action_id, -1, sys.exc_info()[0])
-
-
 
     def loop(self):
         while True:

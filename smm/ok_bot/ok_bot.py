@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from okwalker import OkWalker
+from okwalker import OkUserFilter
+from okwalker import OK_FRIENDS_FILTER_URL
 from db_connect import get_db_connect
 from bot import Bot
 import ok_api
@@ -30,7 +32,7 @@ class OkBot(Bot):
             self.login()
         time_start = datetime.datetime.now().time()
         walked_cnt = 0
-        plan_cnt = 3
+        plan_cnt = 5
         zero_max = 15
 
         add_prob = 1.75
@@ -38,32 +40,20 @@ class OkBot(Bot):
             add_friend = 1
         else:
             add_friend = 0
-        zero_cnt = 0
 
-        limit_stop = False
-        while not limit_stop:
+        age = randint(25, 65)
+        wd = randint(1, 3)
+        filter = OkUserFilter(walker = self.walker, gender='f', from_age=str(age), till_age=str(age + wd),\
+                              location='г. Рязань (Рязанская область)', online = True)
+        run = True
+        friend_cnt = 0
+        while run:
             age = randint(25, 65)
             wd = randint(1, 3)
-            if add_friend == 1:
-                walk_add, add_friend, limit_stop = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)',
-                                                                  add_to_friends=add_friend, gender='f', walk_plan=plan_cnt - walked_cnt )
-                if add_friend == 0:
-                    break
-            else:
-                walk_add, add_friend, limit_stop = self.walker.find_user_list(from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)',
-                                                                  walk_plan=plan_cnt - walked_cnt)
-            walked_cnt += walk_add
-
-            if walk_add == 0:
-                zero_cnt += 1
-            else:
-                zero_cnt = 0
-
-            if zero_cnt >= zero_max:
-                break
-
-            if walked_cnt >= plan_cnt:
-                break
+            filter.apply_filter(gender='f', from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)', online = True)
+            cnt, add_cnt, stop = self.walker.apply_user_list(filter, self.walker.add_friend_handler, plan_cnt - friend_cnt, OK_FRIENDS_FILTER_URL)
+            friend_cnt = friend_cnt + add_cnt
+            run = not stop and (friend_cnt < plan_cnt)
 
     def load_all_message(self):
         if not self.is_logged:
