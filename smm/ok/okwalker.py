@@ -23,7 +23,24 @@ from walker import WALKER_FIENDS
 from walker import WALKER_START_FIENDS
 from walker import WALKER_STOP_FIENDS
 
+from walker import REL_COMMON
+from walker import REL_FRIEND
+from walker import REL_VISIT
+from walker import REL_PLAN_INVITE
+from walker import REL_INVITE
+from walker import REL_FRIEND_OUT
+
+from walker import ACT_SKIP
+from walker import ACT_DONE
+from walker import ACT_STOP
+
+from walker import INV_ERROR
+from walker import INV_OK
+from walker import INV_ALREADY
+from walker import INV_TEMPORARY_CANNONT
+
 from walker import Walker
+from walker import WalkerUserFilter
 import datetime
 from lxml import etree
 from io import StringIO, BytesIO
@@ -32,21 +49,86 @@ import ok_api
 
 import pickle
 
-INV_ERROR = -1
-INV_OK = 0
-INV_ALREADY = 2
-INV_TEMPORARY_CANNONT = 3
-
-REL_FRIEND = 1
-REL_VISIT = 2
-REL_PLAN_INVITE = 3
-REL_INVITE = 4
-REL_FRIEND_OUT = 6
-
-
 OK_FRIENDS_FILTER_URL = 'https://ok.ru/search?st.mode=Users&st.vpl.mini=false&st.onSite=on&st.grmode=Groups&st.posted=set'
 OK_MESSAGES_URL = 'https://ok.ru/messages'
 OK_MESSAGES_URL = 'https://ok.ru/messages'
+
+class OkUserFilter(WalkerUserFilter):
+    def __init__(self, walker, gender, from_age, till_age, location, online):
+        self.walker = walker
+        self.gender = gender
+        self.from_age = from_age
+        self.till_age = till_age
+        self.location = location
+        self.online = online
+        self.sex_tag = 'div'
+
+    def fill_filter(self):
+        # переход в начало страницы
+        self.walker.driver.execute_script("window.scrollTo(0, 20);")
+        sleep(3)
+        flts = self.walker.driver.find_elements_by_class_name("gs_filter_list")
+        super(OkUserFilter, self).fill_filter(flts)
+        sleep(5)
+        self.walker.logger.write_log(WALKER_FIENDS,
+                                     0,
+                                     self.walker.logger.dumps(
+                                                        {'gender': self.gender,
+                                                         'from_age': self.from_age,
+                                                         'till_age': self.till_age,
+                                                         'location': self.location,
+                                                         'on_site': self.online,
+                                                         'walk_plan': self.walker.walk_plan}),
+                                     '')
+
+    def fill_gender(self, cont):
+        self.pause()
+        if self.gender is not None:
+            lst = cont[0].find_elements_by_tag_name('li')
+            if self.gender == 'm':
+                lst[1].find_element_by_tag_name(self.sex_tag).click()
+            if self.gender == 'f':
+                lst[2].find_element_by_tag_name(self.sex_tag).click()
+
+    def fill_from_age(self, cont):
+        if self.from_age is not None:
+            elem = Select(cont[1].find_elements_by_tag_name('select')[0])
+            elem.select_by_value(self.from_age)
+
+    def fill_till_age(self, cont):
+        if self.till_age is not None:
+            elem = Select(cont[1].find_elements_by_tag_name('select')[1])
+            elem.select_by_value(self.till_age)
+
+    def fill_location(self, cont):
+        if self.location is not None:
+            i = 0
+            while i < 3:
+                try:
+                    # до 15.12.2016 был тэг спан
+                    elem = cont[2].find_element_by_xpath("li/div[@data-field_location='" + self.location +
+                                                         "' and @data-field_country='10414533690']")
+                    self.walker.center_click(elem)
+                    break
+                except:
+                    self.walker.driver.execute_script("window.scrollTo(0, 20);")
+                    i += 1
+            if i >= 3:
+                # до 15.12.2016 был тэг спан
+                elem = cont[2].find_element_by_xpath("li/div[@data-field_location='" + self.location +
+                                                     "' and @data-field_country='10414533690']")
+                elem.click()
+
+    def fill_online(self, cont):
+        if self.online is not None:
+            wait = WebDriverWait(self.walker.driver, 50)
+            # elem = wait.until(EC.element_to_be_clickable((By.ID, 'field_onSite')))
+            elem = cont[9].find_element_by_id('field_onSite')
+            elem_m = cont[9].find_element_by_id('field_refs')
+            elem = wait.until(EC.visibility_of_element_located((By.ID, 'field_onSite')))
+            if self.online != elem.is_selected():
+                elem.click()
+
 
 class Object(object):
     pass
@@ -66,6 +148,9 @@ class OkWalker(Walker):
         self.vote_prob = 0.75
         self.message_prob = 0
         self.add_friend_set_id = 1
+
+        self.xpath_user_list = "//div[@id = 'gs_result_list']//div[contains(@class, 'gs_result_i_w')]"
+        self.xpath_show_more = "//div[@id = 'hook_Block_ConversationsList']//a[@data-show-more='link-show-more']"
 
 
     def login(self):
@@ -218,22 +303,6 @@ class OkWalker(Walker):
             #sleep(4)
             #show_more.click()
 
-    def get_last_status(self, user_id):
-        sql = 'select max(t.relation_type_id)' \
-              '  from social.user_relations t ' \
-              ' where t.social_net_id = %(social)s' \
-              '   and t.user_id = %(user_id)s' \
-              '   and t.rel_user_id = %(rel_user_id)s'\
-              '   and t.relation_date = (select max(t_i.relation_date) ' \
-              '                            from social.user_relations t_i ' \
-              '                           where t_i.social_net_id = t.social_net_id ' \
-              '                             and t_i.user_id = t.user_id ' \
-              '                             and t_i.rel_user_id = t.rel_user_id)'
-        return self.db.do_query_all_params(sql, {'user_id': self.user_id, 'social': self.social_id,
-                                                               'rel_user_id': user_id})[0][0]
-
-
-
     def not_handled_users(self, user_list, rel):
         t = 6
         sql = 'select t.rel_user_id' \
@@ -261,21 +330,20 @@ class OkWalker(Walker):
         return self.db.exec_query('commit;')
 
     def open_new_tab_user_link(self, user, main_window):
-        #xpath = "//div[@id = 'gs_result_list']//div[contains(@data-l, ',{0}\\,')]//a[contains(@data-l, 'LS_User_name_')]".format(
-        #    user['id'])
-        #elem = self.driver.find_element(By.XPATH, xpath).send_keys(Keys.CONTROL + Keys.RETURN)
-        #self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.TAB)
-        #ActionChains(self.driver).send_keys(Keys.CONTROL, 't')
-        #self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 't')
         self.driver.execute_script("window.open('', 'new_window')")
-        self.driver.switch_to_window(self.driver.window_handles[-1])
+        handle = self.driver.window_handles[-1]
+        self.driver.switch_to_window(handle)
         self.open_user_page(user['id'])
+        return handle
+
+    def close_tab(self, tab_handle, main_window):
+        self.driver.switch_to_window(tab_handle)
+        self.driver.close()
+        self.driver.switch_to_window(main_window)
         return 0
 
-    def close_tab(self, main_window):
-        #self.driver.switch_to_window(main_window)
-        #self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 'w')
-        self.driver.close();
+    def close_current_tab(self, main_window):
+        self.driver.close()
         self.driver.switch_to_window(main_window)
         return 0
 
@@ -390,13 +458,6 @@ class OkWalker(Walker):
         self.center_click(elem)
         return 0
 
-    def log_friend_list_end(self, us_goto_len, add_to_friends):
-        self.logger.write_log(WALKER_STOP_FIENDS,
-                              0,
-                              'Stop, ' + self.logger.dumps({'us_goto': us_goto_len, 'add_to_friends': add_to_friends}),
-                              '')
-        self.logger.stop_event()
-
     def center_click(self, obj):
         y = self.driver.execute_script("return window.scrollY;")
         h = self.driver.get_window_size()['height'] / 2
@@ -411,10 +472,10 @@ class OkWalker(Walker):
         scroll_y = max(obj.location['y'] - h, 0)
         self.driver.execute_script("window.scrollTo(0, {0} );".format(scroll_y))
 
-    def fill_filter(self, gender = None, from_age = None, till_age = None, location = None, on_site = None,
-                       walk_plan = None, url = None):
+    def fill_filter_old(self, gender = None, from_age = None, till_age = None, location = None, on_site = None,
+                        walk_plan = None, url = None):
 
-        self.driver.set_page_load_timeout(50);
+        self.driver.set_page_load_timeout(50)
         try:
             self.driver.get(url)
             #w = self.driver.get_window_size()['width']
@@ -500,9 +561,9 @@ class OkWalker(Walker):
                                            'on_site': on_site,
                                            'walk_plan': walk_plan}),
                                   '')
-        # Закрытие вкладок кроме opened первых
 
 
+    # Закрытие вкладок кроме opened первых
     def close_last_windows(self, opened = 1):
         for w in self.driver.window_handles[opened:]:
             self.driver.switch_to_window(w)
@@ -513,41 +574,79 @@ class OkWalker(Walker):
     # main_window - handle главного окна (список поиска)
     # try_cnt - количество попыток нажатия добавить в друья
     def add_to_friend(self, user, main_window, try_cnt):
-        rel_date = datetime.datetime.now()
-        self.open_new_tab_user_link(user, main_window)
-        sleep(3)
-        # Несколько попыток нажать кнопку добавить в друзья
-        for i in (0, try_cnt):
-            add_res = self.send_invite()
-            if add_res < 0:
-                self.close_last_windows()
-                self.open_new_tab_user_link(user, main_window)
-                sleep(3)
-            else:
-                break
+        handle = self.open_new_tab_user_link(user, main_window)
+        try:
+            sleep(3)
+            # Несколько попыток нажать кнопку добавить в друзья
+            for i in (0, try_cnt):
+                add_res = self.send_invite()
+                if add_res < 0:
+                    self.close_last_windows()
+                    self.open_new_tab_user_link(user, main_window)
+                    sleep(3)
+                else:
+                    break
 
-        if add_res == INV_OK:
-            # Проверка ставить ли класс
-            if random() < self.class_prob:
-                user['p3'] = self.avatar_class() + 1
-            else:
-                user['p3'] = 0
-            # Проверка ставить ли оценку
-            if random() < self.vote_prob:
-                user['p4'] = self.avatar_vote() + 1
-            else:
-                user['p4'] = 0
-            # Проверка посылать ли сообщение
-            if random() < self.message_prob:
-                user['p5'] = self.select_message(self.add_friend_set_id)
-            else:
-                user['p5'] = 0
-
-        if (add_res == INV_ALREADY) or (add_res == INV_OK):
-            self.add_users_rel([user], rel_date)
-        self.close_last_windows()
+            if add_res == INV_OK:
+                # Проверка ставить ли класс
+                if random() < self.class_prob:
+                    user['p3'] = self.avatar_class() + 1
+                else:
+                    user['p3'] = 0
+                # Проверка ставить ли оценку
+                if random() < self.vote_prob:
+                    user['p4'] = self.avatar_vote() + 1
+                else:
+                    user['p4'] = 0
+                # Проверка посылать ли сообщение
+                if random() < self.message_prob:
+                    user['p5'] = self.select_message(self.add_friend_set_id)
+                else:
+                    user['p5'] = 0
+        finally:
+            self.close_tab(handle, main_window)
         return add_res
 
+    def parse_user_params(self, user):
+        item = {}
+        item['p1'] = None
+        item['p2'] = None
+        item['p3'] = None
+        item['p4'] = None
+        item['p5'] = None
+        # Получение id поользователя
+        x_tmp = user.find_element(By.XPATH,
+                               './/div[contains(@class, "gs_result_i_t")]//div[contains(@class, "ellip")]/a')
+        item['id'] = int(x_tmp.get_attribute('data-l').split(',')[11])
+        # Определение текущего статуса пользователя
+        # Наличие кнопки добавить в друзья
+        if len(user.find_elements(By.XPATH,'.//div[starts-with(@id, "hook_Block_PS_User_")]/a[contains(@href, "cmd=AddFriendButton")]/span')) > 0:
+            item['rel'] = REL_COMMON
+            # Получаем атрибуты друга
+            # photo count
+            x_tmp = user.find_elements(By.XPATH, './/div[contains(@class, "gs_result_i_photos")]/a[@class="al"]')
+            if len(x_tmp) > 0:
+                item['p1'] = x_tmp[0].text.split(u' ')[-1]
+                # common fiends
+            x_tmp = user.find_elements(By.XPATH, './/div[@class = "card-list-sm_hld"]/span/a')
+            if len(x_tmp) > 0:
+                item['p2'] = x_tmp[0].text.split(u' ')[0]
+        # Наличие сообщение об отправки приглашения
+        elif (len(user.find_elements(By.XPATH,'.//div[starts-with(@id, "hook_Block_PS_User_")]/span[contains(@class, "lstp-t")]')) > 0) or\
+             (len(user.find_elements(By.XPATH, './/div[contains(@class, "gs_result_i")]/div/div[contains(@class, "lstp-t")]')) > 0):
+            item['rel'] = REL_INVITE
+        # Наличие признака Друг
+        elif len(user.find_elements(By.XPATH,'.//div[contains(@class, "gs_result_i")]//span[@data-aid="LS_Relation"]')) > 0:
+            item['rel'] = REL_FRIEND
+
+        return  item
+
+    def scroll_user_list(self):
+        # поиск кнопки "Показать еще"
+        show_more = self.driver.find_elements(By.XPATH, self.xpath_show_more)
+        if len(show_more) > 0:
+            sleep(2)
+            show_more.click()
 
     # Возвразает 2 значения
     #   - количество добавленных элементов
@@ -588,7 +687,7 @@ class OkWalker(Walker):
                 # get user id list
                 if len(users) == last_user:
                     if page_down_cnt >= page_down_max_cnt:
-                        break;
+                        break
                     else:
                         page_down_cnt += 1
 
