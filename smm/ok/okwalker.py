@@ -164,6 +164,9 @@ class OkWalker(Walker):
         elem.send_keys(self.user_password)
         elem.send_keys(Keys.RETURN)
 
+    def get_user_page(self, user_id):
+        return "https://ok.ru/profile/{0}/".format(user_id)
+
     def open_user_page(self, user_id):
         self.driver.get("https://ok.ru/profile/{0}/".format(user_id))
         return 0
@@ -330,10 +333,10 @@ class OkWalker(Walker):
         return self.db.exec_query('commit;')
 
     def open_new_tab_user_link(self, user, main_window):
-        self.driver.execute_script("window.open('', 'new_window')")
+        self.driver.execute_script("window.open('"+self.get_user_page(user['id'])+"', 'new_window')")
         handle = self.driver.window_handles[-1]
         self.driver.switch_to_window(handle)
-        self.open_user_page(user['id'])
+        #self.open_user_page(user['id'])
         return handle
 
     def close_tab(self, tab_handle, main_window):
