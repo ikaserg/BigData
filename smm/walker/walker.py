@@ -86,11 +86,11 @@ class Walker(object):
                               '')
         self.logger.stop_event()
 
-    def add_friend_handler(self, user, last_rel):
+    def add_friend_handler(self, user, html_user, last_rel):
         if (user['rel'] == REL_COMMON) and \
                 (last_rel is None or last_rel not in [REL_FRIEND, REL_INVITE, REL_FRIEND_OUT]):
             # Отправка приглащения в друзья
-            add_res = self.add_to_friend(user, self.driver.current_window_handle, self.invite_try_cnt)
+            add_res = self.add_to_friend(user, html_user, self.driver.current_window_handle, self.invite_try_cnt)
             if add_res == INV_OK:
                 user['rel'] = REL_INVITE
                 return ACT_DONE
@@ -122,7 +122,7 @@ class Walker(object):
                     # Получаем текущий статус пользователя в БД
                     last_rel = self.get_last_user_status(item['id'])
                     # Вызов функции обработки
-                    r = handler(item, last_rel)
+                    r = handler(item, x, last_rel)
                     run = r <> ACT_STOP
                     if r == ACT_DONE:
                         do_cnt = do_cnt + 1

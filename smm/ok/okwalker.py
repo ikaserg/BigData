@@ -3,7 +3,7 @@
 LIMIT_STOP = 1
 
 import sys
-
+#import win32com.client as comclt
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -14,6 +14,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 import selenium.webdriver.support.ui
 from time import sleep
+
+import win32com.client as comctl
 
 from random import random
 
@@ -151,6 +153,7 @@ class OkWalker(Walker):
 
         self.xpath_user_list = "//div[@id = 'gs_result_list']//div[contains(@class, 'gs_result_i_w')]"
         self.xpath_show_more = "//div[@id = 'hook_Block_ConversationsList']//a[@data-show-more='link-show-more']"
+        self.xpath_user_link = ".//div[contains(@class, 'gs_result_i_t')]//a[starts-with(@hrefattrs, 'st.cmd=friendMain')]"
 
 
     def login(self):
@@ -332,12 +335,22 @@ class OkWalker(Walker):
                                        'p3': user['p3'], 'p4': user['p4'], 'p5': user['p5']})
         return self.db.exec_query('commit;')
 
-    def open_new_tab_user_link(self, user, main_window):
-        self.driver.execute_script("window.open('"+self.get_user_page(user['id'])+"', 'new_window')")
-        handle = self.driver.window_handles[-1]
-        self.driver.switch_to_window(handle)
-        #self.open_user_page(user['id'])
-        return handle
+    def open_new_tab_user_link(self, user, html_user, main_window):
+        #self.driver.execute_script("window.open('"+self.get_user_page(user['id'])+"', 'new_window')")
+        #self.driver.find_element_by_id('gs_result_list').click()
+        user_link = html_user.find_elements(By.XPATH, self.xpath_user_link)
+        if len(user_link) > 0:
+            actions = ActionChains(self.driver)
+            actions.move_to_element(user_link[0]).context_click().perform()
+            wsh = comctl.Dispatch("WScript.Shell")
+            wsh.SendKeys("{DOWN}")
+            wsh.SendKeys("{DOWN}")
+            wsh.SendKeys("{ENTER}")
+            handle = self.driver.window_handles[-1]
+            self.driver.switch_to_window(handle)
+            return handle
+        else:
+            return None
 
     def close_tab(self, tab_handle, main_window):
         self.driver.switch_to_window(tab_handle)
@@ -576,8 +589,8 @@ class OkWalker(Walker):
     # user - обертка пользователя со страницы поиска
     # main_window - handle главного окна (список поиска)
     # try_cnt - количество попыток нажатия добавить в друья
-    def add_to_friend(self, user, main_window, try_cnt):
-        handle = self.open_new_tab_user_link(user, main_window)
+    def add_to_friend(self, user, html_user, main_window, try_cnt):
+        handle = self.open_new_tab_user_link(user, html_user, main_window)
         try:
             sleep(3)
             # Несколько попыток нажать кнопку добавить в друзья
