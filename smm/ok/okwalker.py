@@ -619,6 +619,8 @@ class OkWalker(Walker):
                     user['p5'] = self.select_message(self.add_friend_set_id)
                 else:
                     user['p5'] = 0
+        except Exception as err:
+            self.logger.write_execption(WALKER_FIENDS, err, '')
         finally:
             self.close_tab(handle, main_window)
         return add_res
