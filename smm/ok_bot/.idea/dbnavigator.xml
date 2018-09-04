@@ -58,7 +58,7 @@ select r.* from social.user_relations r where r.rel_user_id = 444590805338;
 
 select r.* from social.user_relations r order by r.relation_date desc;
 
-delete from schedule.executed_bot_action where exe_date > to_date('31 Aug 2018', 'DD Mon YYYY');
+delete from schedule.executed_bot_action where exe_date > to_date('04 Sep 2018', 'DD Mon YYYY');
 
 select ba.* from  schedule.executed_bot_action ba where exe_date > to_date('31 Aug 2018', 'DD Mon YYYY') order by ba.exe_date desc;
 

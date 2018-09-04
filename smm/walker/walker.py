@@ -59,6 +59,9 @@ class Walker(object):
 
         self.invite_try_cnt = 3
 
+    def get_new_driver(self):
+        return webdriver.Chrome('C:\Distrib\python\chromedriver.exe')
+
     def get_last_user_status(self, user_id):
         sql = 'select max(t.relation_type_id)' \
               '  from social.user_relations t ' \
