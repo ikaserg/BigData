@@ -337,15 +337,22 @@ class OkWalker(Walker):
 
     def open_new_tab_user_link(self, user, html_user, main_window):
         #self.driver.execute_script("window.open('"+self.get_user_page(user['id'])+"', 'new_window')")
+        #new_driver = self.get_new_driver()
+        #new_driver.get(self.get_user_page(user['id']))
+        #return new_driver
+
         #self.driver.find_element_by_id('gs_result_list').click()
         user_link = html_user.find_elements(By.XPATH, self.xpath_user_link)
+
         if len(user_link) > 0:
-            actions = ActionChains(self.driver)
-            actions.move_to_element(user_link[0]).context_click().perform()
-            wsh = comctl.Dispatch("WScript.Shell")
-            wsh.SendKeys("{DOWN}")
-            wsh.SendKeys("{DOWN}")
-            wsh.SendKeys("{ENTER}")
+            user_link[0].send_keys(Keys.SHIFT +  Keys.RETURN)
+            #selectLinkOpeninNewTab = Keys.chord()
+            #    actions = ActionChains(self.driver)
+        #    actions.move_to_element(user_link[0]).context_click().perform()
+        #    wsh = comctl.Dispatch("WScript.Shell")
+        #    wsh.SendKeys("{DOWN}")
+        #    wsh.SendKeys("{DOWN}")
+        #    wsh.SendKeys("{ENTER}")
             handle = self.driver.window_handles[-1]
             self.driver.switch_to_window(handle)
             return handle
@@ -363,9 +370,13 @@ class OkWalker(Walker):
         self.driver.switch_to_window(main_window)
         return 0
 
-    def avatar_class(self):
+    def avatar_class(self, driver = None):
+        if driver is None:
+            v_driver = self.driver
+        else:
+            v_driver = driver
         # поиск элемента аватарки
-        ava = self.driver.find_element(By.XPATH, "//div[contains(@class, 'lcTc_avatar')]")
+        ava = v_driver.find_element(By.XPATH, "//div[contains(@class, 'lcTc_avatar')]")
         # проверка можно ли ставить классы
         class_hook = ava.find_elements(By.XPATH, ".//div[starts-with(@id, 'hook_Block_')]")
         if len(class_hook) > 0:
@@ -387,17 +398,21 @@ class OkWalker(Walker):
             return 1
         return 0
 
-    def avatar_vote(self):
+    def avatar_vote(self, driver = None):
+        if driver is None:
+            v_driver = self.driver
+        else:
+            v_driver = driver
         # open avatar photo
         # поиск элемента аватарки
-        ava = self.driver.find_element(By.XPATH, "//div[contains(@class, 'lcTc_avatar')]")
+        ava = v_driver.find_element(By.XPATH, "//div[contains(@class, 'lcTc_avatar')]")
         # проверка есть ли сылка на изображение
         img = ava.find_elements(By.XPATH, ".//a[@class='card_wrp']")
         if len(img) > 0:
             # переход на страницу с аватаркой
             img[0].click()
             sleep(3)
-            vote_5 = self.driver.find_elements(By.XPATH, "//div[@id='hook_Block_PopLayerViewFriendPhotoRating']/a[text()='5']")
+            vote_5 = v_driver.find_elements(By.XPATH, "//div[@id='hook_Block_PopLayerViewFriendPhotoRating']/a[text()='5']")
             if len(vote_5) > 0:
                 vote_5[0].click()
                 res = 0
@@ -405,7 +420,7 @@ class OkWalker(Walker):
                 # Alredy voted
                 res = 2
             # close vote window
-            self.driver.find_element(By.XPATH, "//div[contains(@class, 'photo-layer_close')]").click()
+            v_driver.find_element(By.XPATH, "//div[contains(@class, 'photo-layer_close')]").click()
             sleep(3)
             return res
         else:
@@ -433,24 +448,28 @@ class OkWalker(Walker):
     # -1 - ошибка при добавлении
     # 0 - успешно добавлено
     # 3 - временно нельзя добавить
-    def send_invite(self):
+    def send_invite(self, driver = None):
+        if driver is None:
+            v_driver = self.driver
+        else:
+            v_driver = driver
         # Find add user button
-        btn = self.driver.find_elements(By.XPATH,
+        btn = v_driver.find_elements(By.XPATH,
                                         u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         if len(btn) == 0:
-            btn = self.driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
+            btn = v_driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
             if len(btn) == 0:
-                btn = self.driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a[text()='Добавить в друзья']")
+                btn = v_driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a[text()='Добавить в друзья']")
         if len(btn) > 0:
             btn[0].click()
             sleep(2)
-            err = self.driver.find_elements(By.XPATH, "//div[@id='notifyPanel_msgContainer']")
+            err = v_driver.find_elements(By.XPATH, "//div[@id='notifyPanel_msgContainer']")
             if len(err) > 0:
                 #Can not add
                 return INV_TEMPORARY_CANNONT
             else:
                 # find add confirmation
-                res = self.driver.find_elements(By.XPATH,
+                res = v_driver.find_elements(By.XPATH,
                                                 u'//div[contains(@data-l, "tc_friend")]/ul/li/div/span[contains(@class, "u-menu_a")]')
                 if len(res) > 0:
                     #succes add
@@ -462,15 +481,19 @@ class OkWalker(Walker):
             # Alredy voted
             return INV_ALREADY
 
-    def send_message(self, msg_text):
+    def send_message(self, msg_text, driver = None):
+        if driver is None:
+            v_driver = self.driver
+        else:
+            v_driver = driver
         sleep(3)
-        self.center_click(self.driver.find_element_by_id("action_menu_write_message_a"))
+        self.center_click(v_driver.find_element_by_id("action_menu_write_message_a"))
         sleep(5)
-        elem = self.driver.find_elements(By.XPATH,
+        elem = v_driver.find_elements(By.XPATH,
            u".//div[@id='msg_layer_wrapper']//form/div[@class='comments_add-itx']//div[starts-with(@id, 'field_txt')]")
         elem[0].send_keys(unicode(msg_text, 'utf-8'))
         sleep(5)
-        elem = self.driver.find_elements(By.XPATH, u"//button[contains(@class, 'comments_add-controls_save')]")[0]
+        elem = v_driver.find_elements(By.XPATH, u"//button[contains(@class, 'comments_add-controls_save')]")[0]
         self.center_click(elem)
         return 0
 
@@ -590,18 +613,13 @@ class OkWalker(Walker):
     # main_window - handle главного окна (список поиска)
     # try_cnt - количество попыток нажатия добавить в друья
     def add_to_friend(self, user, html_user, main_window, try_cnt):
+        #new_driver = self.open_new_tab_user_link(user, html_user, main_window)
         handle = self.open_new_tab_user_link(user, html_user, main_window)
+        add_res = INV_ERROR
         try:
             sleep(3)
             # Несколько попыток нажать кнопку добавить в друзья
-            for i in (0, try_cnt):
-                add_res = self.send_invite()
-                if add_res < 0:
-                    self.close_last_windows()
-                    self.open_new_tab_user_link(user, main_window)
-                    sleep(3)
-                else:
-                    break
+            add_res = self.send_invite()
 
             if add_res == INV_OK:
                 # Проверка ставить ли класс
@@ -623,6 +641,7 @@ class OkWalker(Walker):
             self.logger.write_execption(WALKER_FIENDS, err, '')
         finally:
             self.close_tab(handle, main_window)
+            #new_driver.close()
         return add_res
 
     def parse_user_params(self, user):
