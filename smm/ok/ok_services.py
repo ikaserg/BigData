@@ -103,7 +103,7 @@ class OkServices():
         while x < uid_cnt:
             l = min(wnd, uid_cnt - x)
             # Получение информации о пользователях
-            r, ui = self.api.getUsersInfo([i[0] for i in uids[x: l]], self.fields)
+            r, ui = self.api.getUsersInfo([i[0] for i in uids[x: l - 1]], self.fields)
 
             # Вызов обработчика
             handler(ui)

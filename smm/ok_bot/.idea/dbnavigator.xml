@@ -62,6 +62,8 @@ delete from schedule.executed_bot_action where exe_date > to_date('04 Sep 2018',
 
 select ba.* from  schedule.executed_bot_action ba where exe_date > to_date('31 Aug 2018', 'DD Mon YYYY') order by ba.exe_date desc;
 
+select t.* from schedule.scheduled_bot_action t;
+
 select l.* 
   from social.bot_log l
  where l.log_date >to_date('19 Aug 2018', 'DD Mon YYYY') 
