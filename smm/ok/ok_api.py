@@ -176,7 +176,7 @@ class OdnoklassnikiRu(sm_api.SocialNet):
         x = 0
         while x < uid_cnt:
             l = min(wnd, uid_cnt - x)
-            r, ui = self.api.getUsersInfo(uids[x: x + l], self.fields)
+            r, ui = self.api.getUsersInfo(uids[x: x + l - 1], self.fields)
             self.updateUserInfo(ui)
             x += l
 
