@@ -58,7 +58,7 @@ class OkBot(Bot):
     def load_all_message(self):
         if not self.is_logged:
             self.login()
-        self.walker.load_all_message(20, self.walker.was_read)
+        self.walker.load_all_message(10, self.walker.was_read)
         #загрузка пользователнй сообщений
         self.social_srv.appendMsgUsers()
 
