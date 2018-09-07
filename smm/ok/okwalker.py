@@ -454,8 +454,10 @@ class OkWalker(Walker):
         else:
             v_driver = driver
         # Find add user button
+        #btn = v_driver.find_elements(By.XPATH,
+        #                                u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         btn = v_driver.find_elements(By.XPATH,
-                                        u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
+                                        u'//div[@id = "hook_Block_MainMenu"]//ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         if len(btn) == 0:
             btn = v_driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
             if len(btn) == 0:
