@@ -482,7 +482,7 @@ class OkWalker(Walker):
                 # find add confirmation
                 res = v_driver.find_elements(By.XPATH,
                                                 u'//div[contains(@data-l, "tc_friend")]/ul/li/div/span[contains(@class, "u-menu_a")]')
-                if res == 0:
+                if len(res) == 0:
                     res = v_driver.find_elements(By.XPATH,
                                                  u'//div[@id = "hook_Block_MainMenu"]//ul/li/div/span[contains(@class, "u-menu_a")]')
 
