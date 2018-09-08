@@ -49,23 +49,29 @@ class Periods(object):
         else:
             return dt + datetime.timedelta(hours = shift)
 
-    def trunc_hour(self, dt):
+    def trunc_day(self, dt, mult = 1):
         if dt is None:
             return None
         else:
-            return dt.replace(minute=0, second=0, microsecond=0)
+            return dt.replace(day = math.trunc(dt.day * mult) / mult, hour = 0, minute=0, second=0, microsecond=0)
 
-    def trunc_10_minute(self, dt):
+    def trunc_hour(self, dt, mult = 1):
         if dt is None:
             return None
         else:
-            return dt.replace(minute=math.trunc(dt.minute * 10) / 10, second=0, microsecond=0)
+            return dt.replace(hour = math.trunc(dt.hour * mult) / mult, minute=0, second=0, microsecond=0)
 
-    def trunc_minute(self, dt):
+    def trunc_10_minute(self, dt, mult = 1):
         if dt is None:
             return None
         else:
-            return dt.replace(second=0, microsecond=0)
+            return dt.replace(minute=math.trunc(dt.minute * 10 * mult) / (10 * mult), second=0, microsecond=0)
+
+    def trunc_minute(self, dt, mult = 1):
+        if dt is None:
+            return None
+        else:
+            return dt.replace(minute = math.trunc(dt.minute * mult) / mult, second=0, microsecond=0)
 
     def current_day(self, dt):
         return datetime.datetime.now().replace(hour = 0, minute=0, second=0, microsecond=0)
