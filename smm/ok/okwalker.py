@@ -3,6 +3,7 @@
 LIMIT_STOP = 1
 
 import sys
+import traceback
 #import win32com.client as comclt
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -381,17 +382,22 @@ class OkWalker(Walker):
         class_hook = ava.find_elements(By.XPATH, ".//div[starts-with(@id, 'hook_Block_')]")
         if len(class_hook) > 0:
             # проверка нет ли уже класса
-            elem = class_hook[0].find_elements(By.XPATH, ".//span[contains(@class, 'tico')]")[0]
-            if elem.text == u'Вы':
-                # alredy has class
-                return 2
-            else:
-                if elem.text == u'Класс!':
-                    #send class
-                    elem.click()
-                    return 0
+            elem = class_hook[0].find_elements(By.XPATH, ".//span[contains(@class, 'tico')]")
+            if len(elem) == 0:
+                elem = class_hook[0].find_elements(By.XPATH, ".//span[contains(@class, 'ic_klass')]")
+                if len(elem) == 0:
+                    if elem.text == u'Вы':
+                        # alredy has class
+                        return 2
+                    else:
+                        if elem.text == u'Класс!':
+                            #send class
+                            elem.click()
+                            return 0
+                        else:
+                            # unknow situation
+                            return 3
                 else:
-                    # unknow situation
                     return 3
         else:
             # Class is locked
@@ -449,15 +455,18 @@ class OkWalker(Walker):
     # 0 - успешно добавлено
     # 3 - временно нельзя добавить
     def send_invite(self, driver = None):
+        #if 1 == 1:
+        #    return INV_OK
         if driver is None:
             v_driver = self.driver
         else:
             v_driver = driver
         # Find add user button
-        #btn = v_driver.find_elements(By.XPATH,
-        #                                u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         btn = v_driver.find_elements(By.XPATH,
-                                        u'//div[@id = "hook_Block_MainMenu"]//ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
+                                        u'//div[contains(@data-l, "tc_friend")]/ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
+        if len(btn) == 0:
+            btn = v_driver.find_elements(By.XPATH,
+                                            u'//div[@id = "hook_Block_MainMenu"]//ul/li/a[contains(@href, "dk?cmd=MiddleColumnTopCardFriend")]')
         if len(btn) == 0:
             btn = v_driver.find_elements(By.XPATH, u"//div[contains(@class, 'u-menu_li__pro')]/a/span[text()='Добавить в друзья']")
             if len(btn) == 0:
@@ -618,6 +627,7 @@ class OkWalker(Walker):
         #new_driver = self.open_new_tab_user_link(user, html_user, main_window)
         handle = self.open_new_tab_user_link(user, html_user, main_window)
         add_res = INV_ERROR
+        error_info = ''
         try:
             sleep(3)
             # Несколько попыток нажать кнопку добавить в друзья
@@ -626,19 +636,33 @@ class OkWalker(Walker):
             if add_res == INV_OK:
                 # Проверка ставить ли класс
                 if random() < self.class_prob:
-                    user['p3'] = self.avatar_class() + 1
+                    try:
+                        user['p3'] = self.avatar_class() + 1
+                    except Exception as err:
+                        user['p3'] = 0
+                        error_info = error_info + 'avatar_class error: ' + traceback.format_exc() + '/n'
                 else:
                     user['p3'] = 0
                 # Проверка ставить ли оценку
                 if random() < self.vote_prob:
-                    user['p4'] = self.avatar_vote() + 1
+                    try:
+                        user['p4'] = self.avatar_vote() + 1
+                    except Exception as err:
+                        user['p4'] = 0
+                        error_info = error_info + 'avatar_vote error: ' + traceback.format_exc() + '/n'
                 else:
                     user['p4'] = 0
                 # Проверка посылать ли сообщение
                 if random() < self.message_prob:
-                    user['p5'] = self.select_message(self.add_friend_set_id)
+                    try:
+                        user['p5'] = self.select_message(self.add_friend_set_id)
+                    except Exception as err:
+                        user['p5'] = 0
+                        error_info = error_info + 'invite_message error: ' + traceback.format_exc() + '/n'
                 else:
                     user['p5'] = 0
+                if error_info <> '':
+                    self.logger.write_log(self, WALKER_FIENDS, -1, '', error_info)
         except Exception as err:
             self.logger.write_execption(WALKER_FIENDS, err, '')
         finally:
