@@ -58,7 +58,9 @@ select r.* from social.user_relations r where r.rel_user_id = 444590805338;
 
 select r.* from social.user_relations r order by r.relation_date desc;
 
-delete from schedule.executed_bot_action where exe_date > to_date('06 Sep 2018 22:00', 'DD Mon YYYY HH24:MI');
+delete from schedule.executed_bot_action where exe_date > to_date('08 Sep 2018 19:00', 'DD Mon YYYY HH24:MI');
+
+update social.users_auth set user_password = '8uwk8vs6eX8Z5CM' where user_id = 574248559595; 
 
 select ba.* from  schedule.executed_bot_action ba where exe_date > to_date('31 Aug 2018', 'DD Mon YYYY') order by ba.exe_date desc;
 
