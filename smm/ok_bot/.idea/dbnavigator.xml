@@ -25,11 +25,7 @@
     <show-object-properties value="false" />
     <loaded-nodes>
       <connection connection-id="94cad4b2-dc69-4d35-8a39-5da935c53ae6">
-        <schema name="etl" object-types="function, table, view" />
-        <schema name="pg_catalog" object-types="function, table, view" />
-        <schema name="public" object-types="function, table, view" />
-        <schema name="schedule" object-types="column, function, table, view" />
-        <schema name="social" object-types="column, function, table, view" />
+        <schema name="schedule" object-types="table" />
       </connection>
     </loaded-nodes>
   </component>
@@ -58,9 +54,9 @@ select r.* from social.user_relations r where r.rel_user_id = 444590805338;
 
 select r.* from social.user_relations r order by r.relation_date desc;
 
-delete from schedule.executed_bot_action where exe_date > to_date('08 Sep 2018 19:00', 'DD Mon YYYY HH24:MI');
+delete from schedule.executed_bot_action where exe_date > to_date('24 Sep 2018 22:00', 'DD Mon YYYY HH24:MI');
 
-update social.users_auth set user_password = '8uwk8vs6eX8Z5CM' where user_id = 574248559595; 
+update social.users_auth set user_password = 'D3h6FpdG5yYI4bE' where user_id = 574248559595; 
 
 select ba.* from  schedule.executed_bot_action ba where exe_date > to_date('31 Aug 2018', 'DD Mon YYYY') order by ba.exe_date desc;
 
@@ -86,6 +82,9 @@ select l.*
     <last-used-providers>
       <object-type object-type="TABLE" editor-provider="DATA" />
     </last-used-providers>
+  </component>
+  <component name="DBNavigator.Project.FileConnectionMappingManager">
+    <mapping file-url="file://$PROJECT_DIR$/../walker/Env_crt.sql" connection-id="94cad4b2-dc69-4d35-8a39-5da935c53ae6" session-id="MAIN" current-schema="schedule" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />

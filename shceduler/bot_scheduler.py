@@ -9,6 +9,8 @@ from db_connect import get_db_connect
 from db_connect import get_db_connect_prod
 import ast
 
+from sessions import SessionManager
+
 class Periods(object):
     def __init__(self):
         None
@@ -105,6 +107,8 @@ class BotScheduler(object):
 
         self.exe_sql = 'insert into schedule.executed_bot_action(bot_action_id, bot_id, exe_date, result_id, result_message) ' \
                        ' values( %(bot_action_id)s , %(bot_id)s, %(exe_date)s , %(result_id)s , %(result_message)s  )'
+
+        self.session = SessionManager()
 
     def write_executed(self, dt, bot_id, bot_action_id, result, message):
         self.db.exec_query_params(self.exe_sql, {'bot_action_id': bot_action_id,

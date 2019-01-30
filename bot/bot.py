@@ -3,3 +3,4 @@ class Bot(object):
         return 0
     def close_app(self):
         exit()
+        
