@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
+
+from session import DaySession
+
 import math
 import datetime
 from time import sleep
@@ -7,9 +10,8 @@ from ok_bot import OkBot
 from db_sql import filed_by_names
 from db_connect import get_db_connect
 from db_connect import get_db_connect_prod
-import ast
 
-from sessions import SessionManager
+import ast
 
 class Periods(object):
     def __init__(self):
@@ -108,7 +110,7 @@ class BotScheduler(object):
         self.exe_sql = 'insert into schedule.executed_bot_action(bot_action_id, bot_id, exe_date, result_id, result_message) ' \
                        ' values( %(bot_action_id)s , %(bot_id)s, %(exe_date)s , %(result_id)s , %(result_message)s  )'
 
-        self.session = SessionManager()
+        self.session = DaySession(self.db)
 
     def write_executed(self, dt, bot_id, bot_action_id, result, message):
         self.db.exec_query_params(self.exe_sql, {'bot_action_id': bot_action_id,
@@ -126,7 +128,7 @@ class BotScheduler(object):
             trunc_period = getattr(self.period, act.trunc_period)
             add_period = getattr(self.period, act.add_period)
             if add_period(trunc_period(act.last_date), 1).replace(tzinfo = None) + act.shift <= datetime.datetime.now():
-                params ={'db': self.db}
+                params ={'db': self.db, 'session': self.session}
                 bot_prs = ast.literal_eval(act.bot_params)
                 for key in bot_prs:
                     params[key] = bot_prs[key]

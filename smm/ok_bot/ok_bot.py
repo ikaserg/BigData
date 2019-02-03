@@ -9,18 +9,22 @@ import ok_api
 import ok_services
 import datetime
 
+from session import DaySession
+
 from random import randint
 from random import random
 
 class OkBot(Bot):
-    def __init__(self, db, user_name):
+    def __init__(self, db, session, user_name):
         self.db = db
+        self.session = session
         self.user_name = user_name
         self.bot_id = 1
         self.walker = OkWalker(self.db, self.user_name)
         self.social_srv =  ok_services.OkServices(ok_api.OdnoklassnikiRu(), db)
         self.social_srv.api.getDefAuth()
         self.is_logged = False
+        self.stop_limit = 2
 
     def login(self):
         if not self.is_logged:
@@ -45,14 +49,17 @@ class OkBot(Bot):
         wd = randint(1, 3)
         filter = OkUserFilter(walker = self.walker, gender='f', from_age=str(age), till_age=str(age + wd),\
                               location='г. Рязань (Рязанская область)', online = True)
-        run = True
         friend_cnt = 0
+        stop_count = self.session.get_int_variable('daily_stop_count')
+        run = (stop_count < self.stop_limit)
         while run:
             age = randint(25, 65)
             wd = randint(1, 3)
             filter.apply_filter(gender='f', from_age=str(age), till_age=str(age + wd), location='г. Рязань (Рязанская область)', online = True)
             cnt, add_cnt, stop = self.walker.apply_user_list(filter, self.walker.add_friend_handler, plan_cnt - friend_cnt, OK_FRIENDS_FILTER_URL)
             friend_cnt = friend_cnt + add_cnt
+            if stop :
+                self.session.set_int_variable('daily_stop_count', stop_count + 1)
             run = not stop and (friend_cnt < plan_cnt)
 
     def load_all_message(self):
