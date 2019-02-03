@@ -9,8 +9,6 @@ import ok_api
 import ok_services
 import datetime
 
-from session import DaySession
-
 from random import randint
 from random import random
 
@@ -69,13 +67,9 @@ class OkBot(Bot):
         #загрузка пользователнй сообщений
         self.social_srv.appendMsgUsers()
 
-
     def daily_bot(self):
         #проверка сообщений
         self.walker.login()
         self.walker.load_all_message(20, self.walker.was_read)
         #загрузка пользователнй сообщений
         self.social_srv.appendMsgUsers()
-
-
-
