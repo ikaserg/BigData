@@ -13,7 +13,7 @@ class SessionManager(object):
         self.insert_sql = 'insert into schedule.sessions(session_id, dt_start, client_key) ' \
                           'values (DEFAULT, %(dt_start)s, %(client_key)s) RETURNING session_id '
 
-        self.get_sql = 'select max(int_value), max(varchar_value)'\
+        self.get_sql = 'select COALESCE(max(int_value), 0), max(varchar_value)'\
                        '  from schedule.session_variable v ' \
                        ' where v.session_id = %(session_id)s ' \
                        '   and v.variable_key = %(variable_key)s '
