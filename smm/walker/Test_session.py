@@ -7,8 +7,8 @@ def main():
     db = get_db_connect_prod()
     man = DaySession(db)
     r = man.get_day_session()
-    man.set_int_variable('test1', 15)
-    man.set_varchar_variable('test2', 'qwerty')
+    man.set_int_variable('test1', 56)
+    man.set_varchar_variable('test2', 'asdfgh')
     print r
 
 main()
